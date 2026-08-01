@@ -1,0 +1,77 @@
+{
+  "app/build.gradle": {
+    "mtime": 1785612795.6893966,
+    "ast_hash": "f5705664a8e3eb94c98bf9f9ec7e81cc",
+    "semantic_hash": "f5705664a8e3eb94c98bf9f9ec7e81cc"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/AuditApi.java": {
+    "mtime": 1785613026.9230177,
+    "ast_hash": "0efcd8ae33e427ea2b761e161b281dd9",
+    "semantic_hash": "0efcd8ae33e427ea2b761e161b281dd9"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/Copy.java": {
+    "mtime": 1785613115.309473,
+    "ast_hash": "4e7e99ef9518b9282c0f43a2c9e8b113",
+    "semantic_hash": "4e7e99ef9518b9282c0f43a2c9e8b113"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/Design.java": {
+    "mtime": 1785613070.7192402,
+    "ast_hash": "3af735180c34458551c129844536256d",
+    "semantic_hash": "3af735180c34458551c129844536256d"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/KeyAudit.java": {
+    "mtime": 1785612980.067044,
+    "ast_hash": "fd25805276741941e2eb71d2b2468254",
+    "semantic_hash": "fd25805276741941e2eb71d2b2468254"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/MainActivity.java": {
+    "mtime": 1785613206.3694246,
+    "ast_hash": "99e2d312b8ab423b707da348a85e29cb",
+    "semantic_hash": "99e2d312b8ab423b707da348a85e29cb"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/MinimaAddress.java": {
+    "mtime": 1785612877.4427462,
+    "ast_hash": "d38116cfbd9f15133e9ad3dc7ffdf025",
+    "semantic_hash": "d38116cfbd9f15133e9ad3dc7ffdf025"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/NodeApi.java": {
+    "mtime": 1785612987.1790776,
+    "ast_hash": "5998d50b99bc63453a17c343724b25f3",
+    "semantic_hash": "5998d50b99bc63453a17c343724b25f3"
+  },
+  "app/src/main/java/com/eurobuddha/keyreuses/Sha3.java": {
+    "mtime": 1785612848.6113877,
+    "ast_hash": "b437789d895166026746a05d4a4cf71c",
+    "semantic_hash": "b437789d895166026746a05d4a4cf71c"
+  },
+  "app/src/test/java/com/eurobuddha/keyreuses/KeyAuditTest.java": {
+    "mtime": 1785613327.3057148,
+    "ast_hash": "89b02f289b988af128ea201d1ceefa7e",
+    "semantic_hash": "89b02f289b988af128ea201d1ceefa7e"
+  },
+  "app/src/test/java/com/eurobuddha/keyreuses/MinimaAddressTest.java": {
+    "mtime": 1785613381.9561658,
+    "ast_hash": "28919f8b2bcd956e65ff327169c00af7",
+    "semantic_hash": "28919f8b2bcd956e65ff327169c00af7"
+  },
+  "app/src/test/java/com/eurobuddha/keyreuses/Sha3Test.java": {
+    "mtime": 1785613375.5164149,
+    "ast_hash": "bf49c0cf7ac2c669a092496014eca901",
+    "semantic_hash": "bf49c0cf7ac2c669a092496014eca901"
+  },
+  "build.gradle": {
+    "mtime": 1785612684.0397003,
+    "ast_hash": "583193a3771192898c84ddef2d926224",
+    "semantic_hash": "583193a3771192898c84ddef2d926224"
+  },
+  "gradlew": {
+    "mtime": 1785612684.0392106,
+    "ast_hash": "02c16663c6f0aa37f98d94d698c22b8c",
+    "semantic_hash": "02c16663c6f0aa37f98d94d698c22b8c"
+  },
+  "settings.gradle": {
+    "mtime": 1785612804.160096,
+    "ast_hash": "bcc306e785b8d3291b12e96acaf24847",
+    "semantic_hash": "bcc306e785b8d3291b12e96acaf24847"
+  }
+}

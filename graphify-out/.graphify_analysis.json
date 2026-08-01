@@ -1,0 +1,322 @@
+{
+  "communities": {
+    "0": [
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_alpha",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_card",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_badge",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_buildui",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_clearerror",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_controlscard",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_copy",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_divider",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_dp",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_explainercard",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_footer",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_headercell",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_headerrow",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_html",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_insetblock",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_marginparams",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_noticecard",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_num",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_numcell",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_opennode",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_pairingbanner",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_recoblock",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_renderresults",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_row",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_runaudit",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_setbusy",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_subtitle",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_tablecard",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_text",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_title",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_verdictcard",
+      "appcompatactivity",
+      "layoutparams",
+      "linearlayout",
+      "progressbar",
+      "textview",
+      "view"
+    ],
+    "1": [
+      "activity",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_audit",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_auditapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_chunk",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_enc",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_friendly",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_getjson",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_join",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_nonnull",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_ondestroy",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_parsereuse",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_parseusage",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_post",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi_readbounded",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_cb",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_cb_onerror",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_java_handler",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_java_jsonarray",
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_java_jsonobject",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_java_jsonarray",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_oncreate",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_ondestroy",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_onkeys",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_setpaired",
+      "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity_showerror",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi_ondestroy",
+      "bundle",
+      "override"
+    ],
+    "2": [
+      "app_src_main_java_com_eurobuddha_keyreuses_auditapi_cb_onresult",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_localkey",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_localkey_localkey",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_reuse",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_reuse_reuse",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_usage",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_usage_usage",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_java_test",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_addr",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_caseinsensitivejoin",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_chainaheadofcounterisatrisk",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_cleannodeisok",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_confirmedreuseabovethreeisred",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_confirmedreuseatthreeisamber",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_confirmedreusebeatstheheuristic",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_derivationmismatchisflagged",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_equalcountsarenotflagged",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_exhaustionisflagged",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_malformedpublickeystillproducesarow",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_missingbackendrowsmeanneverspent",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_nullbackendlistsdonotcrash",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_recommendationtakesthemaxacrossallkeys",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_reusedfalseisnotareuse",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_roworderandnumberingfollowthenode",
+      "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest_run"
+    ],
+    "3": [
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_java_charset",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_frompublickey",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_hexupper",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_isvalidpublickey",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_miniaddress",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_minimaaddress",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_serminidata",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_sermininumberzero",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress_write",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_result",
+      "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_result_result",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_java_test",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_everygoldenisdistinct",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_goldens",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_lowercaseinputgivesthesameaddress",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_malformedkeysarerejectedratherthanderived",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_mxaddressesarewellformed",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_scriptshapematchesminimacore",
+      "app_src_test_java_com_eurobuddha_keyreuses_minimaaddresstest_minimaaddresstest_serializationprimitives"
+    ],
+    "4": [
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_keyaudit",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_keyaudit_join",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_keyaudit_keyaudit",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_keyaudit_upper",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_result",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_result_result",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_row",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_row_row",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_row_status",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_status",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_status_at_risk",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_status_ok",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_status_reused",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_verdict",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_verdict_ok",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_verdict_reuse_risk",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_verdict_reuse_warn",
+      "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_verdict_risk_heuristic"
+    ],
+    "5": [
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_absorb",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_hash",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_hex",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_keccakf",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_selftest",
+      "app_src_main_java_com_eurobuddha_keyreuses_sha3_sha3_sha3",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_java_charset",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_java_test",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_abc",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_emptystring",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_exactlyonerateblock",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_fourfiftyonebitmessage",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_h",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_multiblockmessage",
+      "app_src_test_java_com_eurobuddha_keyreuses_sha3test_sha3test_selftestpasses"
+    ],
+    "6": [
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_cb",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_cb_onerror",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_cb_onresult",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_java_context",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_java_handler",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_java_jsonobject",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi_cmd",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi_dead",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi_nodeapi",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi_timeoutfor",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_pairinglistener",
+      "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_pairinglistener_onenabled",
+      "minimaapi"
+    ],
+    "7": [
+      "app_src_main_java_com_eurobuddha_keyreuses_design",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_accentbutton",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_chip",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_design",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_dot",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_dp",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_design_dpi",
+      "app_src_main_java_com_eurobuddha_keyreuses_design_java_context",
+      "gradientdrawable"
+    ],
+    "8": [
+      "app_src_main_java_com_eurobuddha_keyreuses_copy",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy_copy",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy_coverage",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy_recocommand",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy_reuseriskbody",
+      "app_src_main_java_com_eurobuddha_keyreuses_copy_copy_reusewarnbody"
+    ],
+    "9": [
+      "gradlew",
+      "gradlew__entry",
+      "gradlew_die",
+      "gradlew_save",
+      "gradlew_warn"
+    ],
+    "10": [
+      "app_build"
+    ],
+    "11": [
+      "build"
+    ],
+    "12": [
+      "settings"
+    ]
+  },
+  "cohesion": {
+    "0": 0.21322537112010798,
+    "1": 0.1103448275862069,
+    "2": 0.27635327635327633,
+    "3": 0.18181818181818182,
+    "4": 0.15789473684210525,
+    "5": 0.19883040935672514,
+    "6": 0.22857142857142856,
+    "7": 0.4222222222222222,
+    "8": 0.2857142857142857,
+    "9": 0.6,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_mainactivity_mainactivity",
+      "label": "MainActivity",
+      "degree": 41
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_auditapi_auditapi",
+      "label": "AuditApi",
+      "degree": 19
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_localkey",
+      "label": "LocalKey",
+      "degree": 19
+    },
+    {
+      "id": "app_src_test_java_com_eurobuddha_keyreuses_keyaudittest_keyaudittest",
+      "label": "KeyAuditTest",
+      "degree": 18
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_usage",
+      "label": "Usage",
+      "degree": 16
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_nodeapi_nodeapi",
+      "label": "NodeApi",
+      "degree": 13
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_keyaudit",
+      "label": "KeyAudit",
+      "degree": 11
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_keyaudit_reuse",
+      "label": "Reuse",
+      "degree": 11
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_minimaaddress_minimaaddress",
+      "label": "MinimaAddress",
+      "degree": 11
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_keyreuses_design_design",
+      "label": "Design",
+      "degree": 9
+    }
+  ],
+  "surprises": [
+    {
+      "source": "MainActivity",
+      "target": "AuditApi",
+      "source_files": [
+        "app/src/main/java/com/eurobuddha/keyreuses/MainActivity.java",
+        "app/src/main/java/com/eurobuddha/keyreuses/AuditApi.java"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "MainActivity",
+      "target": "NodeApi",
+      "source_files": [
+        "app/src/main/java/com/eurobuddha/keyreuses/MainActivity.java",
+        "app/src/main/java/com/eurobuddha/keyreuses/NodeApi.java"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
