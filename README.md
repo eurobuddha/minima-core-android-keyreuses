@@ -78,6 +78,13 @@ Every run also **cross-checks** the derivation: `/keyaudit` echoes the server's 
 key, and any disagreement raises a red banner. A silent mismatch would mean the `/reuse` lookup
 asked about the wrong address and got back a reassuring "not reused".
 
+### Screenshots
+
+This screen is **not** `FLAG_SECURE`. It shows public keys and addresses only — nothing that can
+move funds — and the audit already transmits exactly that data. Capturing and sharing a verdict (to
+an exchange, to support, in a disclosure) is a first-class use of the app. `FLAG_SECURE` belongs in
+the node app, which renders your seed phrase.
+
 ### IPC safety
 
 `keys action:list` is the app's entire node surface: one READ command, 64 rows, roughly 13 KB — far

@@ -91,5 +91,6 @@ emphasis preserved as `<b>`/`<i>` and rendered via `HtmlCompat`. Diff `Copy.java
 | **Derivation cross-check** banner | `/keyaudit` echoes the server's address; a silent mismatch would mean we queried the wrong address and got a reassuring answer |
 | **Exhaustion** banner | `maxuses` is returned by the node and ignored by the dapp; on exhaustion minima-core resets `uses` to 0 and keeps signing (`security-review.md`, `CORE-VM-2`) — guaranteed re-use |
 | Pairing banner | The dapp runs inside the node; a companion APK must be enabled first |
-| `FLAG_SECURE`, `allowBackup=false` | The screen shows the node's full public-key and address set |
+| `allowBackup=false` | Nothing here is worth restoring to another device; the app holds no state |
+| **No** `FLAG_SECURE` | Only public keys and addresses are shown — no seed, no private key — and the audit already sends exactly that to the backend. Screenshotting a verdict to send to an exchange or attach to a disclosure is a first-class use. `FLAG_SECURE` belongs in `apks/base`, which renders the seed phrase; no companion APK sets it. |
 | Coverage note adds the default-address caveat | Stated plainly in `KeyAudit.java:36-38` but never surfaced in the dapp's UI |

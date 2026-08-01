@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -63,11 +62,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // This screen shows the node's full public-key and address set — keep it out of the
-        // recents thumbnail and away from screenshots, matching the family standard.
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE);
-
+        // Deliberately NOT FLAG_SECURE. This screen shows public keys and addresses only — no seed,
+        // no private key, nothing that can move funds, and the audit already sends exactly this
+        // data to the backend. Sharing a screenshot of the verdict (to an exchange, to support, in
+        // a disclosure) is a first-class use of this app, so blocking capture would cost more than
+        // it protects. FLAG_SECURE belongs in the node app, which renders the seed phrase.
         setContentView(R.layout.activity_main);
         container = findViewById(R.id.container);
 
