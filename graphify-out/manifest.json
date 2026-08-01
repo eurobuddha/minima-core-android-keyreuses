@@ -25,9 +25,9 @@
     "semantic_hash": "fd25805276741941e2eb71d2b2468254"
   },
   "app/src/main/java/com/eurobuddha/keyreuses/MainActivity.java": {
-    "mtime": 1785613206.3694246,
-    "ast_hash": "99e2d312b8ab423b707da348a85e29cb",
-    "semantic_hash": "99e2d312b8ab423b707da348a85e29cb"
+    "mtime": 1785614279.0643406,
+    "ast_hash": "c78babbfc4e0bcae9b14e59de7d1fe19",
+    "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/keyreuses/MinimaAddress.java": {
     "mtime": 1785612877.4427462,
@@ -73,5 +73,20 @@
     "mtime": 1785612804.160096,
     "ast_hash": "bcc306e785b8d3291b12e96acaf24847",
     "semantic_hash": "bcc306e785b8d3291b12e96acaf24847"
+  },
+  "CLAUDE.md": {
+    "mtime": 1785612684.0468419,
+    "ast_hash": "4439d09bc81851d89f9ffcecc4136dcf",
+    "semantic_hash": ""
+  },
+  "DESIGN_MAP.md": {
+    "mtime": 1785614286.8300831,
+    "ast_hash": "480533ded728a0b4da2e2673039be8ee",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1785614289.5729094,
+    "ast_hash": "6120ff6298f1080a4f94fcd9695db913",
+    "semantic_hash": ""
   }
 }
