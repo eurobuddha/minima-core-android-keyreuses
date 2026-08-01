@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tokens lifted from the KeyUses MiniDapp (mds/keyuses/minidapp/index.html:12-16).
+  NOTE these are NOT the utxo/history palette — ok/warn/risk differ. Java view code reads
+  Design.java (programmatic views need ints); these exist for the theme. Keep the two in sync.
+-->
+<resources>
+    <color name="ku_bg">#FF0A0A0F</color>
+    <color name="ku_card">#FF15151F</color>
+    <color name="ku_border">#FF2A2A38</color>
+    <color name="ku_text">#FFE8E6E3</color>
+    <color name="ku_dim">#FF8D8B89</color>
+    <color name="ku_accent">#FFF7931A</color>
+    <color name="ku_accent2">#FFFF5E3A</color>
+    <color name="ku_ok">#FF4ADE80</color>
+    <color name="ku_warn">#FFFBBF24</color>
+    <color name="ku_risk">#FFF87171</color>
+</resources>
