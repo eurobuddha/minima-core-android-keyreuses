@@ -32,7 +32,7 @@ controlled by the same key are not counted.
 ## Architecture
 
 Companion APK — it does **not** embed a node. Java + classic Views, talking to the Minima Core node
-app (`org.minimarex.minimacore`) over broadcast-Intent IPC via `app/libs/minimaapi.aar`.
+app (`com.eurobuddha.minimacore`) over broadcast-Intent IPC via `app/libs/minimaapi.aar`.
 
 ```
 keys action:list  ──►  node (IPC)      64 x {publickey, uses, maxuses}

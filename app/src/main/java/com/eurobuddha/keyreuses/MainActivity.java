@@ -42,8 +42,8 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String NODE_PACKAGE = "org.minimarex.minimacore";
-    private static final String VERSION = "0.1.0";
+    private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
+    private static final String VERSION = "0.1.3";
 
     private NodeApi node;
     private AuditApi api;
@@ -617,7 +617,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openNode() {
-        final Intent i = getPackageManager().getLaunchIntentForPackage(NODE_PACKAGE);
+        Intent i = getPackageManager().getLaunchIntentForPackage(NODE_PACKAGE);
+        if (i == null) i = getPackageManager().getLaunchIntentForPackage("com.eurobuddha.minimablock");
+        if (i == null) i = getPackageManager().getLaunchIntentForPackage("com.eurobuddha.pandamonium");
         if (i != null) {
             startActivity(i);
         } else {
