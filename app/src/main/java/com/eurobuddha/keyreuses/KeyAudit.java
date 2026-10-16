@@ -43,12 +43,18 @@ public final class KeyAudit {
     public static final class LocalKey {
         public final String publicKey;   // "0x…"
         public final int uses;
-        public final int maxUses;        // 262144 for the default 64/3 tree
+        public final int maxUses;        // 262144 for the classic 64/3 tree, 268435456 for 128/4
+        public final int size;           // keys per level: 64 classic, 128 block-as-keyuses
 
-        public LocalKey(String publicKey, int uses, int maxUses) {
+        public LocalKey(String publicKey, int uses, int maxUses, int size) {
             this.publicKey = publicKey;
             this.uses = uses;
             this.maxUses = maxUses;
+            this.size = size;
+        }
+
+        public LocalKey(String publicKey, int uses, int maxUses) {
+            this(publicKey, uses, maxUses, 64);
         }
     }
 
@@ -102,12 +108,13 @@ public final class KeyAudit {
         public final int local;          // node's uses counter
         public final long sigs;          // on-chain signatures (spend blocks)
         public final long coins;         // spent coins (upper bound)
-        public final boolean risk;       // heuristic: sigs > local
+        public final boolean risk;       // heuristic: sigs > local (classic keys only)
         public final boolean reused;     // definitive: in the known-reuse database
         public final long reuseCount;
+        public final boolean blockScheme; // 128/4 block-as-keyuses key
 
         Row(int index, String address, int local, long sigs, long coins,
-            boolean risk, boolean reused, long reuseCount) {
+            boolean risk, boolean reused, long reuseCount, boolean blockScheme) {
             this.index = index;
             this.address = address;
             this.local = local;
@@ -116,6 +123,7 @@ public final class KeyAudit {
             this.risk = risk;
             this.reused = reused;
             this.reuseCount = reuseCount;
+            this.blockScheme = blockScheme;
         }
 
         public Status status() {
@@ -135,15 +143,20 @@ public final class KeyAudit {
         public final boolean derivationMismatch;
         /** A key within EXHAUSTION_SLACK of maxuses; on exhaustion the node silently resets to 0. */
         public final boolean exhaustion;
+        /** How many keys of each scheme — drives whether the keyuses advice / block note render. */
+        public final int classicCount;
+        public final int blockCount;
 
         Result(List<Row> rows, Verdict verdict, long worstReuse, long recommendedKeyUses,
-               boolean derivationMismatch, boolean exhaustion) {
+               boolean derivationMismatch, boolean exhaustion, int classicCount, int blockCount) {
             this.rows = rows;
             this.verdict = verdict;
             this.worstReuse = worstReuse;
             this.recommendedKeyUses = recommendedKeyUses;
             this.derivationMismatch = derivationMismatch;
             this.exhaustion = exhaustion;
+            this.classicCount = classicCount;
+            this.blockCount = blockCount;
         }
     }
 
@@ -179,10 +192,15 @@ public final class KeyAudit {
         final List<Row> rows = new ArrayList<>(localKeys.size());
         boolean anyRisk = false, anyReuse = false, mismatch = false, exhaustion = false;
         long recommended = 0, worstReuse = 0;
+        int classicCount = 0, blockCount = 0;
 
         for (int i = 0; i < localKeys.size(); i++) {
             final LocalKey k = localKeys.get(i);
             final int local = k.uses;
+            // block-as-keyuses key (keys action:list reports size/depth): uses ≈ block height,
+            // managed by the node — the counter checks and the keyuses advice don't apply to it.
+            final boolean blk = k.size == 128;
+            if (blk) blockCount++; else classicCount++;
             final Usage u = k.publicKey == null ? null : byPk.get(upper(k.publicKey));
             final MinimaAddress.Result d = (derived != null && i < derived.size()) ? derived.get(i) : null;
 
@@ -208,14 +226,14 @@ public final class KeyAudit {
                 worstReuse = Math.max(worstReuse, r.reuseCount);
             }
 
-            final boolean risk = sigs > local;
+            final boolean risk = !blk && sigs > local;
             if (risk) anyRisk = true;
 
-            recommended = Math.max(recommended, Math.max(sigs, local));
+            if (!blk) recommended = Math.max(recommended, Math.max(sigs, local));
 
             final String display = d != null ? d.mx : "(address unavailable)";
             rows.add(new Row(i + 1, display, local, sigs, coins,
-                    risk, confirmedReuse, r == null ? 0 : r.reuseCount));
+                    risk, confirmedReuse, r == null ? 0 : r.reuseCount, blk));
         }
 
         // Precedence: confirmed reuse beats the heuristic (index.html:269-326).
@@ -229,7 +247,7 @@ public final class KeyAudit {
         }
 
         return new Result(rows, verdict, worstReuse, recommended + KEYUSES_MARGIN,
-                mismatch, exhaustion);
+                mismatch, exhaustion, classicCount, blockCount);
     }
 
     private static String upper(String s) {

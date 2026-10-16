@@ -31,9 +31,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * KeyUses — audits this node's 64 keys for one-time-signature (Winternitz) re-use.
+ * KeyUses — audits this node's keys (classic 64/3 and block-as-keyuses 128/4) for
+ * one-time-signature (Winternitz) re-use.
  *
- * <p>Native port of the KeyUses MiniDapp ({@code mds/keyuses/minidapp/index.html} v0.1.51). One
+ * <p>Native port of the KeyUses MiniDapp ({@code mds/keyuses/minidapp/index.html} v0.1.55). One
  * screen, one node command ({@code keys action:list}), addresses derived on-device, and two
  * parallel HTTPS lookups against the hosted archive index.
  *
@@ -43,7 +44,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
-    private static final String VERSION = "0.1.3";
+    private static final String VERSION = "0.1.4";
 
     private NodeApi node;
     private AuditApi api;
@@ -142,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
             final JSONObject k = keys.optJSONObject(i);
             if (k == null) continue;
             final String pk = k.optString("publickey", "");
-            local.add(new KeyAudit.LocalKey(pk, k.optInt("uses", 0), k.optInt("maxuses", 0)));
+            local.add(new KeyAudit.LocalKey(pk, k.optInt("uses", 0), k.optInt("maxuses", 0),
+                    k.optInt("size", 64)));
 
             final MinimaAddress.Result d = MinimaAddress.fromPublicKey(pk);
             derived.add(d);
@@ -240,18 +242,32 @@ public class MainActivity extends AppCompatActivity {
         } else if (r.verdict == KeyAudit.Verdict.RISK_HEURISTIC) {
             card.addView(insetBlock(Copy.HOW_LABEL, Copy.HOW_LIST, false));
             card.addView(insetBlock(Copy.DO_LABEL, Copy.DO_LIST, false));
-            card.addView(recoBlock(r.recommendedKeyUses));
+            addRecoBlocks(card, r);
         } else {
-            card.addView(recoBlock(r.recommendedKeyUses));
+            addRecoBlocks(card, r);
         }
 
         return card;
     }
 
+    /**
+     * The keyuses recommendation applies to classic keys only; 128/4 keys get the block-height
+     * note instead (index.html:299-314).
+     */
+    private void addRecoBlocks(LinearLayout card, KeyAudit.Result r) {
+        if (r.classicCount > 0) {
+            card.addView(recoBlock(r.recommendedKeyUses, r.blockCount > 0));
+        }
+        if (r.blockCount > 0) {
+            card.addView(insetBlock(Copy.BLK_NOTE_LABEL, Copy.BLK_NOTE, false));
+        }
+    }
+
     /** The .reco box: the exact command to run on the next seed re-sync, tap to copy. */
-    private View recoBlock(long keyuses) {
+    private View recoBlock(long keyuses, boolean mixedSchemes) {
         final String cmd = Copy.recoCommand(keyuses);
-        final LinearLayout box = (LinearLayout) insetBlock(Copy.RECO_LABEL, null, true);
+        final LinearLayout box = (LinearLayout) insetBlock(
+                Copy.RECO_LABEL + (mixedSchemes ? Copy.RECO_LABEL_CLASSIC_SUFFIX : ""), null, true);
         final TextView code = text(cmd, 12f, Design.ACCENT, Typeface.NORMAL);
         code.setTypeface(Typeface.MONOSPACE);
         code.setLineSpacing(dp(3), 1f);
@@ -362,7 +378,8 @@ public class MainActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         addrCell.setPadding(dp(4), 0, dp(4), 0);
 
-        final TextView n = text("#" + r.index, 9.5f, Design.DIM_2, Typeface.NORMAL);
+        final TextView n = text("#" + r.index + (r.blockScheme ? " · 128/4" : ""),
+                9.5f, Design.DIM_2, Typeface.NORMAL);
         addrCell.addView(n);
 
         final TextView a = text(r.address, 9.5f, Design.DIM, Typeface.NORMAL);

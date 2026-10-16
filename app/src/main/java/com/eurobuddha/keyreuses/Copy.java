@@ -2,7 +2,7 @@ package com.eurobuddha.keyreuses;
 
 /**
  * User-facing copy, transcribed verbatim from the KeyUses MiniDapp
- * ({@code mds/keyuses/minidapp/index.html} v0.1.51). Kept in one place so the APK and the dapp can
+ * ({@code mds/keyuses/minidapp/index.html} v0.1.55). Kept in one place so the APK and the dapp can
  * be diffed word for word.
  *
  * <p>Light HTML ({@code <b>}, {@code <br>}, {@code <li>}) is preserved and rendered with
@@ -17,15 +17,17 @@ final class Copy {
 
     /** index.html:79-85 */
     static final String SUBTITLE =
-            "Minima signatures are <b>stateful</b>: each of your 64 keys must move to a fresh leaf "
+            "Minima signatures are <b>stateful</b>: each of your keys must move to a fresh leaf "
             + "every time it signs. If a seed re-sync set <tt>keyuses</tt> too low, your node can "
             + "<b>re-use a leaf it already spent on-chain</b> — which weakens that key. This tool "
             + "checks, for each key, how many times it has actually signed on-chain and compares "
-            + "that to your node's own counter.";
+            + "that to your node's own counter. Works with classic keys (64/3) and the new "
+            + "<tt>-blockaskeyuses</tt> keys (128/4), where the node tracks uses by block height "
+            + "instead of a manual counter.";
 
     /** index.html:96-101 */
     static final String PRIVACY =
-            "<b>Privacy:</b> your 64 <i>public</i> keys are sent to eurobuddha.com, which returns "
+            "<b>Privacy:</b> your <i>public</i> keys are sent to eurobuddha.com, which returns "
             + "how often each of your addresses was spent. Public keys can't move funds, but they "
             + "do reveal your addresses to that server.";
 
@@ -41,6 +43,13 @@ final class Copy {
     /* ---------- verdicts (index.html:264-327) ---------- */
 
     static final String RECO_LABEL = "RECOMMENDED KEYUSES FOR YOUR NEXT SEED RE-SYNC";
+    static final String RECO_LABEL_CLASSIC_SUFFIX = " (CLASSIC KEYS)";
+
+    /** index.html:302-306 — shown whenever the node has 128/4 keys. */
+    static final String BLK_NOTE_LABEL = "BLOCK-AS-KEYUSES KEYS";
+    static final String BLK_NOTE =
+            "This node's 128/4 keys take their key uses from the current block height automatically "
+            + "— no <tt>keyuses</tt> value is needed (or possible to get wrong) for them on a re-sync.";
 
     static String recoCommand(long keyuses) {
         return "archive action:import file:<your-backup> phrase:\"<your 24 words>\" keyuses:" + keyuses;
@@ -130,7 +139,8 @@ final class Copy {
             + "this — do not read a clean verdict as safe.";
 
     static final String EXHAUSTION =
-            "One of your keys is close to its 262,144-signature limit. On exhaustion a Minima node "
+            "One of your keys is close to its signature limit (262,144 for a classic 64/3 key; "
+            + "268,435,456 for a block-as-keyuses 128/4 key). On exhaustion a Minima node "
             + "silently restarts at leaf 0 and keeps signing, which guarantees re-use. Migrate to a "
             + "fresh seed before that key runs out.";
 
@@ -139,9 +149,11 @@ final class Copy {
     static final String EXPLAIN_LABEL = "WHAT IS KEY RE-USE, AND WHY DOES IT MATTER?";
 
     static final String EXPLAIN_BODY =
-            "Minima keys are <b>stateful</b>. Each key is a tree of 262,144 <i>one-time</i> "
-            + "signatures (leaves). Signing safely means using a <b>fresh leaf every time</b> — your "
-            + "node tracks this with a counter.<br><br>"
+            "Minima keys are <b>stateful</b>. Each key is a tree of <i>one-time</i> signatures "
+            + "(leaves) — 262,144 per classic key, 268,435,456 per <tt>-blockaskeyuses</tt> key. "
+            + "Signing safely means using a <b>fresh leaf every time</b> — your node tracks this "
+            + "with a counter (classic), or follows the block height so every signature lands on a "
+            + "leaf no earlier signature can have used (block-as-keyuses).<br><br>"
 
             + "<b>Re-using a leaf</b> — signing two different transactions with the same one-time key "
             + "— <b>weakens</b> that key. A one-time signature only stays secure if it signs once; "

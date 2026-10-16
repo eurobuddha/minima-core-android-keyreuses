@@ -208,4 +208,46 @@ public class KeyAuditTest {
         assertEquals(1, r.rows.size());
         assertEquals("(address unavailable)", r.rows.get(0).address);
     }
+
+    @Test
+    public void blockSchemeKeyIsNeverCounterRisk() {
+        // uses ≈ block height on a -blockaskeyuses node; sigs > local is meaningless there.
+        final KeyAudit.Result r = run(
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 5, 268435456, 128)),
+                Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 9, 40)),
+                Collections.<KeyAudit.Reuse>emptyList());
+
+        assertEquals(KeyAudit.Verdict.OK, r.verdict);
+        assertTrue(r.rows.get(0).blockScheme);
+        assertEquals(0, r.classicCount);
+        assertEquals(1, r.blockCount);
+        // nothing classic to recommend for — only the margin remains
+        assertEquals(KeyAudit.KEYUSES_MARGIN, r.recommendedKeyUses);
+    }
+
+    @Test
+    public void recommendationIgnoresBlockSchemeKeys() {
+        // The 128/4 key's uses (≈ block height) must not inflate the classic keyuses advice.
+        final KeyAudit.Result r = run(
+                Arrays.asList(new KeyAudit.LocalKey(PK1, 40, 262144),
+                              new KeyAudit.LocalKey(PK2, 1200000, 268435456, 128)),
+                Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 10, 10)),
+                Collections.<KeyAudit.Reuse>emptyList());
+
+        assertEquals(1, r.classicCount);
+        assertEquals(1, r.blockCount);
+        assertEquals(40 + KeyAudit.KEYUSES_MARGIN, r.recommendedKeyUses);
+    }
+
+    @Test
+    public void confirmedReuseStillFlagsBlockSchemeKeys() {
+        // The witness-confirmed reuse database is scheme-independent.
+        final KeyAudit.Result r = run(
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 7, 268435456, 128)),
+                Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 2, 2)),
+                Collections.singletonList(new KeyAudit.Reuse(addr(PK1), true, 2)));
+
+        assertEquals(KeyAudit.Verdict.REUSE_WARN, r.verdict);
+        assertEquals(KeyAudit.Status.REUSED, r.rows.get(0).status());
+    }
 }
