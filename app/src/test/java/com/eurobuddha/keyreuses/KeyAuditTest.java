@@ -36,7 +36,7 @@ public class KeyAuditTest {
                               new KeyAudit.LocalKey(PK2, 4, 262144)),
                 Arrays.asList(new KeyAudit.Usage(PK1, addr(PK1), 10, 25),
                               new KeyAudit.Usage(PK2, addr(PK2), 3, 3)),
-                Collections.<KeyAudit.Reuse>emptyList());
+                Arrays.asList(new KeyAudit.Reuse(addr(PK1),false,0),new KeyAudit.Reuse(addr(PK2),false,0)));
 
         assertEquals(KeyAudit.Verdict.OK, r.verdict);
         assertEquals(KeyAudit.Status.OK, r.rows.get(0).status());
@@ -118,8 +118,8 @@ public class KeyAuditTest {
     }
 
     @Test
-    public void missingBackendRowsMeanNeverSpent() {
-        // a key absent from the archive index has simply never been spent from — not an error
+    public void missingBackendRowsRemainUnknown() {
+        // Missing evidence must not be presented as a completed clean audit.
         final KeyAudit.Result r = run(
                 Arrays.asList(new KeyAudit.LocalKey(PK1, 0, 262144),
                               new KeyAudit.LocalKey(PK2, 0, 262144)),
@@ -128,6 +128,8 @@ public class KeyAuditTest {
 
         assertEquals(KeyAudit.Verdict.OK, r.verdict);
         assertEquals(2, r.rows.size());
+        assertFalse(r.publicComplete);
+        assertEquals(KeyAudit.Status.UNKNOWN,r.rows.get(0).status());
         assertEquals(0, r.rows.get(0).sigs);
         assertEquals(0, r.rows.get(0).coins);
         assertEquals(KeyAudit.KEYUSES_MARGIN, r.recommendedKeyUses);
@@ -213,16 +215,16 @@ public class KeyAuditTest {
     public void blockSchemeKeyIsNeverCounterRisk() {
         // uses ≈ block height on a -blockaskeyuses node; sigs > local is meaningless there.
         final KeyAudit.Result r = run(
-                Collections.singletonList(new KeyAudit.LocalKey(PK1, 5, 268435456, 128)),
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 5, 268435456, 128, 4)),
                 Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 9, 40)),
                 Collections.<KeyAudit.Reuse>emptyList());
 
         assertEquals(KeyAudit.Verdict.OK, r.verdict);
-        assertTrue(r.rows.get(0).blockScheme);
-        assertEquals(0, r.classicCount);
-        assertEquals(1, r.blockCount);
-        // nothing classic to recommend for — only the margin remains
-        assertEquals(KeyAudit.KEYUSES_MARGIN, r.recommendedKeyUses);
+        assertEquals(KeyAudit.Family.BLOCK,r.rows.get(0).family);
+        assertEquals(0, r.classicKeys);
+        assertEquals(1, r.blockKeys);
+        // No classic keys means no classic recovery recommendation.
+        assertEquals(0, r.recommendedKeyUses);
     }
 
     @Test
@@ -230,12 +232,12 @@ public class KeyAuditTest {
         // The 128/4 key's uses (≈ block height) must not inflate the classic keyuses advice.
         final KeyAudit.Result r = run(
                 Arrays.asList(new KeyAudit.LocalKey(PK1, 40, 262144),
-                              new KeyAudit.LocalKey(PK2, 1200000, 268435456, 128)),
+                              new KeyAudit.LocalKey(PK2, 1200000, 268435456, 128, 4)),
                 Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 10, 10)),
                 Collections.<KeyAudit.Reuse>emptyList());
 
-        assertEquals(1, r.classicCount);
-        assertEquals(1, r.blockCount);
+        assertEquals(1, r.classicKeys);
+        assertEquals(1, r.blockKeys);
         assertEquals(40 + KeyAudit.KEYUSES_MARGIN, r.recommendedKeyUses);
     }
 
@@ -243,7 +245,7 @@ public class KeyAuditTest {
     public void confirmedReuseStillFlagsBlockSchemeKeys() {
         // The witness-confirmed reuse database is scheme-independent.
         final KeyAudit.Result r = run(
-                Collections.singletonList(new KeyAudit.LocalKey(PK1, 7, 268435456, 128)),
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 7, 268435456, 128, 4)),
                 Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 2, 2)),
                 Collections.singletonList(new KeyAudit.Reuse(addr(PK1), true, 2)));
 

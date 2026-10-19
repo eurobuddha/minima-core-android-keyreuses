@@ -44,7 +44,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
-    private static final String VERSION = "0.1.5";
+    private static final String VERSION = "0.1.6";
 
     private NodeApi node;
     private AuditApi api;
@@ -112,9 +112,9 @@ public class MainActivity extends AppCompatActivity {
         node.cmd("keys action:list", new NodeApi.Cb() {
             @Override public void onResult(JSONObject json) {
                 setPaired(true);
-                final JSONObject resp = json.optJSONObject("response");
+                final JSONObject resp = json == null ? null : json.optJSONObject("response");
                 final JSONArray keys = resp == null ? null : resp.optJSONArray("keys");
-                if (!json.optBoolean("status", true) || keys == null) {
+                if (keys == null || !Boolean.TRUE.equals(json.opt("status"))) {
                     setBusy(false);
                     showError(Copy.ERR_KEYS);
                     return;
@@ -133,6 +133,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private static int exactInt(JSONObject row, String name, int absent) {
+        if (!row.has(name)) return absent;
+        try { return new java.math.BigDecimal(row.get(name).toString()).intValueExact(); }
+        catch (Exception invalid) { return -1; }
+    }
+
+
     private void onKeys(JSONArray keys) {
         final List<KeyAudit.LocalKey> local = new ArrayList<>();
         final List<MinimaAddress.Result> derived = new ArrayList<>();
@@ -143,8 +150,8 @@ public class MainActivity extends AppCompatActivity {
             final JSONObject k = keys.optJSONObject(i);
             if (k == null) continue;
             final String pk = k.optString("publickey", "");
-            local.add(new KeyAudit.LocalKey(pk, k.optInt("uses", 0), k.optInt("maxuses", 0),
-                    k.optInt("size", 64)));
+            local.add(new KeyAudit.LocalKey(pk, exactInt(k, "uses", -1),
+                    exactInt(k, "maxuses", 0), exactInt(k, "size", 0), exactInt(k, "depth", 0)));
 
             final MinimaAddress.Result d = MinimaAddress.fromPublicKey(pk);
             derived.add(d);
@@ -177,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
     private void renderResults(KeyAudit.Result r, long archiveTip) {
         resultsBox.removeAllViews();
 
+        if (!r.publicComplete) resultsBox.addView(noticeCard(Copy.INCOMPLETE, Design.WARN));
         if (r.derivationMismatch) {
             resultsBox.addView(noticeCard(Copy.MISMATCH, Design.RISK));
         }
@@ -209,9 +217,9 @@ public class MainActivity extends AppCompatActivity {
                 body = Copy.RISK_BODY;
                 break;
             default:
-                color = Design.OK;
-                title = Copy.OK_TITLE;
-                body = Copy.OK_BODY;
+                color = r.publicComplete ? Design.OK : Design.WARN;
+                title = r.publicComplete ? Copy.OK_TITLE : Copy.PARTIAL;
+                body = r.publicComplete ? Copy.OK_BODY : Copy.INCOMPLETE;
                 break;
         }
 
@@ -255,10 +263,10 @@ public class MainActivity extends AppCompatActivity {
      * note instead (index.html:299-314).
      */
     private void addRecoBlocks(LinearLayout card, KeyAudit.Result r) {
-        if (r.classicCount > 0) {
-            card.addView(recoBlock(r.recommendedKeyUses, r.blockCount > 0));
+        if (r.complete && r.classicKeys > 0 && r.recommendedKeyUses < 262144) {
+            card.addView(recoBlock(r.recommendedKeyUses, r.blockKeys > 0));
         }
-        if (r.blockCount > 0) {
+        if (r.blockKeys > 0) {
             card.addView(insetBlock(Copy.BLK_NOTE_LABEL, Copy.BLK_NOTE, false));
         }
     }
@@ -335,10 +343,10 @@ public class MainActivity extends AppCompatActivity {
 
     /** Group display rows without changing their audit identity or source mapping. */
     private void renderKeySections(LinearLayout table, KeyAudit.Result result) {
-        for(int group=0;group<2;group++) {
+        for(int group=0;group<3;group++) {
             java.util.List<KeyAudit.Row> rows=new ArrayList<>();
             for(KeyAudit.Row auditRow:result.rows) {
-                int rowGroup=auditRow.blockScheme ? 1 : 0;
+                int rowGroup=auditRow.family == KeyAudit.Family.BLOCK ? 1 : auditRow.family == KeyAudit.Family.CLASSIC ? 0 : 2;
                 if(rowGroup==group) rows.add(auditRow);
             }
             if(rows.isEmpty())continue;
@@ -346,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
             section.setOrientation(LinearLayout.VERTICAL);
             section.setTag("keyuses.section."+group);
             section.setLayoutParams(marginParams(0,group==0?0:24,0,0));
-            TextView heading=text((group==0 ? "Classic keys" : "Block-as-keyuses keys")+" · "+rows.size(),15f,Design.ACCENT,Typeface.BOLD);
+            TextView heading=text((group==0 ? "Classic keys" : group==1 ? "Block-as-keyuses keys" : "Unrecognized key shape")+" · "+rows.size(),15f,Design.ACCENT,Typeface.BOLD);
             heading.setBackground(Design.card(this,Design.ACCENT_SOFT,Design.BORDER,8));
             heading.setPadding(dp(12),dp(14),dp(12),dp(14));
             heading.setLayoutParams(marginParams(0,0,0,12));
@@ -398,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
         addrCell.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,COL_ADDR));
         addrCell.setPadding(dp(4), 0, dp(4), 0);
 
-        final TextView n = text("#" + displayIndex + (r.blockScheme ? " · 128/4" : ""),
+        final TextView n = text("#" + displayIndex + (r.family == KeyAudit.Family.BLOCK ? " · 128/4" : ""),
                 9.5f, Design.DIM_2, Typeface.NORMAL);
         n.setTag("keyuses.number."+r.index);
         addrCell.addView(n);
@@ -415,14 +423,14 @@ public class MainActivity extends AppCompatActivity {
         });
         row.addView(addrCell);
 
-        row.addView(numCell(num(r.local), COL_USES));
+        row.addView(numCell(r.local < 0 ? "—" : num(r.local), COL_USES));
         row.addView(numCell(num(r.sigs), COL_SIGS));
         row.addView(numCell(num(r.coins), COL_COINS));
 
         // status chip
         final String label;
         final int fg, bg;
-        switch (r.status()) {
+        switch (r.reused ? KeyAudit.Status.REUSED : r.risk ? KeyAudit.Status.AT_RISK : r.publicChecked ? KeyAudit.Status.OK : KeyAudit.Status.UNKNOWN) {
             case REUSED:
                 final boolean red = r.reuseCount > KeyAudit.REUSE_RED_ABOVE;
                 fg = red ? Design.RISK : Design.WARN;
@@ -434,10 +442,12 @@ public class MainActivity extends AppCompatActivity {
                 bg = Design.RISK_SOFT;
                 label = "AT RISK";
                 break;
+            case UNKNOWN:
+                fg = Design.WARN; bg = Design.WARN_SOFT; label = "Unknown"; break;
             default:
                 fg = Design.OK;
                 bg = Design.OK_SOFT;
-                label = "OK";
+                label = r.sigs > 0 ? "Used · " + num(r.sigs) : "Unused";
                 break;
         }
 

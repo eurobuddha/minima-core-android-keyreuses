@@ -15,3 +15,21 @@ no blocking issue in this display change. APK package/version and family signer
 verified. No physical-device check, installation or publication.
 Candidate: dist/keyuses-0.1.5-candidate.apk
 SHA256: 4aa6bfbae89492212910f3fa5e4f7f7ab02c705e30a0295df4b5c3af97a42e03
+
+KeyUses0.1.6/code106 — audit evidence parity
+Reused FutureCash Next KeyAudit.java verbatim except package (identical to the
+integrated engine), AuditApi's validated parsers and AuditRunner's exactInt helper.
+Both families retain witness-confirmed reuse; block leaf positions are not compared
+with classic signature counts. Missing/malformed evidence stays unknown rather
+than clean. Public usage stays visible without inventing a local counter. Recovery
+recommendations require complete evidence and a value below the classic capacity.
+Reused integrated status/partial UI wording and retained standalone IPC/public-key
+input. There is no phrase input. Standalone audits keys returned by keys action:list;
+it does not gain the embedded node's private access to derive all96 default keys.
+Existing tests updated to require explicit negative evidence; donor dual-family
+and parser regressions ported (FutureCash-only cache test excluded).49 tests pass,
+zero failures/errors/skips. UI regressions cover narrow tables, unknown/known usage,
+partial verdict and absence of recovery advice. No live node/network/signing tests.
+Reviewed every changed source/config/test; full signed release and lint pass.
+Actual package/version/family certificate verified. Candidate:
+dist/keyuses-0.1.6-candidate.apk with SHA256 sidecar. No install/publication.

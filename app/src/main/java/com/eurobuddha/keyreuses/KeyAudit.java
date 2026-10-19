@@ -37,24 +37,41 @@ public final class KeyAudit {
 
     private KeyAudit() {}
 
+    // Shapes and capacities match PandaPools KeyUses.capacityOf and the node's
+    // TreeKey.createDefault. Inspect each row; never choose one family for the wallet.
+    public enum Family { CLASSIC, BLOCK, UNKNOWN }
+
     /* ---------- inputs ---------- */
 
     /** One row of {@code keys action:list}. */
     public static final class LocalKey {
         public final String publicKey;   // "0x…"
         public final int uses;
-        public final int maxUses;        // 262144 for the classic 64/3 tree, 268435456 for 128/4
-        public final int size;           // keys per level: 64 classic, 128 block-as-keyuses
-
-        public LocalKey(String publicKey, int uses, int maxUses, int size) {
-            this.publicKey = publicKey;
-            this.uses = uses;
-            this.maxUses = maxUses;
-            this.size = size;
-        }
+        public final int maxUses;
+        public final Family family;
+        public final boolean valid;
+        public final boolean shapeValid;
 
         public LocalKey(String publicKey, int uses, int maxUses) {
-            this(publicKey, uses, maxUses, 64);
+            this(publicKey, uses, maxUses, 0, 0);
+        }
+
+        public LocalKey(String publicKey, int uses, int maxUses, int size, int depth) {
+            this.publicKey = publicKey;
+            this.uses = uses;
+            // Older replies omit shape: accept only the explicit legacy capacity.
+            if ((size == 64 && depth == 3) || (size == 0 && depth == 0 && maxUses == 262144)) {
+                family = Family.CLASSIC;
+                this.maxUses = 262144;
+            } else if (size == 128 && depth == 4) {
+                family = Family.BLOCK;
+                this.maxUses = 268435456;
+            } else {
+                family = Family.UNKNOWN;
+                this.maxUses = 0;
+            }
+            shapeValid = family != Family.UNKNOWN && (maxUses == 0 || maxUses == this.maxUses);
+            valid = shapeValid && uses >= 0;
         }
     }
 
@@ -76,13 +93,28 @@ public final class KeyAudit {
     /** One row from GET /reuse — the witness-confirmed known-reuse database. */
     public static final class Reuse {
         public final String address;     // 0x
+        /** The same address in Mx form, when the server echoed it. Needed because this app also asks
+         *  about its RESCUE DESTINATION, which the user supplies as an Mx and whose hex we never see
+         *  (it belongs to another wallet) — so an Mx-keyed match is the only way to find its verdict. */
+        public final String miniaddress;
         public final boolean reused;
         public final long reuseCount;    // worst-leaf reuse depth
 
         public Reuse(String address, boolean reused, long reuseCount) {
+            this(address, "", reused, reuseCount);
+        }
+
+        public Reuse(String address, String miniaddress, boolean reused, long reuseCount) {
             this.address = address;
+            this.miniaddress = miniaddress == null ? "" : miniaddress;
             this.reused = reused;
             this.reuseCount = reuseCount;
+        }
+
+        /** Does this verdict describe the given address, in either spelling? */
+        public boolean matches(String addr) {
+            if (addr == null || addr.isEmpty()) return false;
+            return addr.equalsIgnoreCase(address) || addr.equals(miniaddress);
         }
     }
 
@@ -99,22 +131,28 @@ public final class KeyAudit {
         REUSE_RISK
     }
 
-    public enum Status { OK, AT_RISK, REUSED }
+    public enum Status { OK, AT_RISK, REUSED, UNKNOWN }
 
     /** One table row. */
     public static final class Row {
         public final int index;          // 1-based, matching the node's key order
         public final String address;     // Mx (locally derived), or a fallback string
-        public final int local;          // node's uses counter
+        public final int local;          // classic counter or block-tree leaf position
+        public final Family family;
+        public final boolean checked;
+        /** Both public endpoints returned matching evidence, independent of a local counter. */
+        public final boolean publicChecked;
         public final long sigs;          // on-chain signatures (spend blocks)
         public final long coins;         // spent coins (upper bound)
-        public final boolean risk;       // heuristic: sigs > local (classic keys only)
+        public final boolean risk;       // heuristic: sigs > local
         public final boolean reused;     // definitive: in the known-reuse database
         public final long reuseCount;
-        public final boolean blockScheme; // 128/4 block-as-keyuses key
 
         Row(int index, String address, int local, long sigs, long coins,
-            boolean risk, boolean reused, long reuseCount, boolean blockScheme) {
+            boolean risk, boolean reused, long reuseCount, Family family, boolean checked, boolean publicChecked) {
+            this.family = family;
+            this.checked = checked;
+            this.publicChecked = publicChecked;
             this.index = index;
             this.address = address;
             this.local = local;
@@ -123,13 +161,12 @@ public final class KeyAudit {
             this.risk = risk;
             this.reused = reused;
             this.reuseCount = reuseCount;
-            this.blockScheme = blockScheme;
         }
 
         public Status status() {
             if (reused) return Status.REUSED;
             if (risk) return Status.AT_RISK;
-            return Status.OK;
+            return checked ? Status.OK : Status.UNKNOWN;
         }
     }
 
@@ -137,26 +174,38 @@ public final class KeyAudit {
         public final List<Row> rows;
         public final Verdict verdict;
         public final long worstReuse;        // worst reuse depth seen, for the verdict copy
-        /** The value to put in {@code keyuses:} on the next resync (already includes the margin). */
+        /** Classic-only recovery estimate including the margin; zero if no classic keys were audited. */
         public final long recommendedKeyUses;
         /** A key whose locally derived address disagreed with the server's — results untrustworthy. */
         public final boolean derivationMismatch;
         /** A key within EXHAUSTION_SLACK of maxuses; on exhaustion the node silently resets to 0. */
         public final boolean exhaustion;
-        /** How many keys of each scheme — drives whether the keyuses advice / block note render. */
-        public final int classicCount;
-        public final int blockCount;
+        /** Every requested key has a usable shape and explicit results from both endpoints. */
+        public final boolean complete;
+        public final boolean publicComplete;
+        public final int classicKeys, blockKeys, unknownKeys;
 
         Result(List<Row> rows, Verdict verdict, long worstReuse, long recommendedKeyUses,
-               boolean derivationMismatch, boolean exhaustion, int classicCount, int blockCount) {
+               boolean derivationMismatch, boolean exhaustion) {
+            int classic = 0, block = 0, unknown = 0;
+            boolean all = !rows.isEmpty() && !derivationMismatch;
+            boolean allPublic = all;
+            for (Row row : rows) {
+                if (row.family == Family.CLASSIC) classic++;
+                else if (row.family == Family.BLOCK) block++;
+                else unknown++;
+                all &= row.checked;
+                allPublic &= row.publicChecked;
+            }
+            classicKeys = classic; blockKeys = block; unknownKeys = unknown;
+            complete = all;
+            publicComplete = allPublic;
             this.rows = rows;
             this.verdict = verdict;
             this.worstReuse = worstReuse;
             this.recommendedKeyUses = recommendedKeyUses;
             this.derivationMismatch = derivationMismatch;
             this.exhaustion = exhaustion;
-            this.classicCount = classicCount;
-            this.blockCount = blockCount;
         }
     }
 
@@ -166,7 +215,7 @@ public final class KeyAudit {
      * Join the node's keys against the backend results.
      *
      * @param localKeys  from {@code keys action:list}, in node order
-     * @param usage      /keyaudit rows (may be missing entries; missing == never spent)
+     * @param usage      /keyaudit rows (missing entries make the audit incomplete)
      * @param reuse      /reuse rows (may be empty)
      * @param derived    locally derived addresses, parallel to localKeys (entry may be null if the
      *                   public key was malformed)
@@ -192,15 +241,10 @@ public final class KeyAudit {
         final List<Row> rows = new ArrayList<>(localKeys.size());
         boolean anyRisk = false, anyReuse = false, mismatch = false, exhaustion = false;
         long recommended = 0, worstReuse = 0;
-        int classicCount = 0, blockCount = 0;
 
         for (int i = 0; i < localKeys.size(); i++) {
             final LocalKey k = localKeys.get(i);
             final int local = k.uses;
-            // block-as-keyuses key (keys action:list reports size/depth): uses ≈ block height,
-            // managed by the node — the counter checks and the keyuses advice don't apply to it.
-            final boolean blk = k.size == 128;
-            if (blk) blockCount++; else classicCount++;
             final Usage u = k.publicKey == null ? null : byPk.get(upper(k.publicKey));
             final MinimaAddress.Result d = (derived != null && i < derived.size()) ? derived.get(i) : null;
 
@@ -226,14 +270,21 @@ public final class KeyAudit {
                 worstReuse = Math.max(worstReuse, r.reuseCount);
             }
 
-            final boolean risk = !blk && sigs > local;
+            // Spend counts estimate a classic counter. They are not comparable
+            // to a block-tree leaf position; witness-confirmed reuse applies to both.
+            final boolean risk = k.valid && k.family == Family.CLASSIC && sigs > local;
             if (risk) anyRisk = true;
 
-            if (!blk) recommended = Math.max(recommended, Math.max(sigs, local));
+            if (k.family == Family.CLASSIC && k.valid)
+                recommended = Math.max(recommended, Math.max(sigs, local));
 
             final String display = d != null ? d.mx : "(address unavailable)";
             rows.add(new Row(i + 1, display, local, sigs, coins,
-                    risk, confirmedReuse, r == null ? 0 : r.reuseCount, blk));
+                    risk, confirmedReuse, r == null ? 0 : r.reuseCount, k.family,
+                    k.valid && d != null && u != null && r != null
+                            && d.hex.equalsIgnoreCase(u.address),
+                    k.shapeValid && d != null && u != null && r != null
+                            && d.hex.equalsIgnoreCase(u.address)));
         }
 
         // Precedence: confirmed reuse beats the heuristic (index.html:269-326).
@@ -246,8 +297,10 @@ public final class KeyAudit {
             verdict = Verdict.OK;
         }
 
-        return new Result(rows, verdict, worstReuse, recommended + KEYUSES_MARGIN,
-                mismatch, exhaustion, classicCount, blockCount);
+        boolean hasClassic = false;
+        for (LocalKey key : localKeys) hasClassic |= key.family == Family.CLASSIC;
+        return new Result(rows, verdict, worstReuse, hasClassic ? recommended + KEYUSES_MARGIN : 0,
+                mismatch, exhaustion);
     }
 
     private static String upper(String s) {
