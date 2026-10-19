@@ -44,7 +44,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
-    private static final String VERSION = "0.1.4";
+    private static final String VERSION = "0.1.5";
 
     private NodeApi node;
     private AuditApi api;
@@ -308,8 +308,7 @@ public class MainActivity extends AppCompatActivity {
 
     /* ---------- results table ---------- */
 
-    // Fixed column widths so the header and rows line up. Total exceeds a phone's width, so the
-    // table scrolls horizontally — the same behaviour as the dapp's `.tablewrap { overflow-x: auto }`.
+    // Weighted columns keep every count visible; the warning badge stays with its key.
     private static final int COL_ADDR = 190, COL_USES = 66, COL_SIGS = 82, COL_COINS = 66, COL_STATUS = 90;
 
     private View tableCard(KeyAudit.Result r, long archiveTip) {
@@ -322,13 +321,9 @@ public class MainActivity extends AppCompatActivity {
         final LinearLayout table = new LinearLayout(this);
         table.setOrientation(LinearLayout.VERTICAL);
 
-        table.addView(headerRow());
-        for (KeyAudit.Row row : r.rows) table.addView(row(row));
+        renderKeySections(table,r);
 
-        final HorizontalScrollView hs = new HorizontalScrollView(this);
-        hs.setHorizontalScrollBarEnabled(false);
-        hs.addView(table);
-        card.addView(hs);
+        card.addView(table);
 
         final TextView cov = text(Copy.coverage(archiveTip), 10.5f, Design.DIM, Typeface.NORMAL);
         cov.setPadding(dp(2), dp(14), dp(2), 0);
@@ -336,6 +331,32 @@ public class MainActivity extends AppCompatActivity {
         card.addView(cov);
 
         return card;
+    }
+
+    /** Group display rows without changing their audit identity or source mapping. */
+    private void renderKeySections(LinearLayout table, KeyAudit.Result result) {
+        for(int group=0;group<2;group++) {
+            java.util.List<KeyAudit.Row> rows=new ArrayList<>();
+            for(KeyAudit.Row auditRow:result.rows) {
+                int rowGroup=auditRow.blockScheme ? 1 : 0;
+                if(rowGroup==group) rows.add(auditRow);
+            }
+            if(rows.isEmpty())continue;
+            LinearLayout section=new LinearLayout(this);
+            section.setOrientation(LinearLayout.VERTICAL);
+            section.setTag("keyuses.section."+group);
+            section.setLayoutParams(marginParams(0,group==0?0:24,0,0));
+            TextView heading=text((group==0 ? "Classic keys" : "Block-as-keyuses keys")+" · "+rows.size(),15f,Design.ACCENT,Typeface.BOLD);
+            heading.setBackground(Design.card(this,Design.ACCENT_SOFT,Design.BORDER,8));
+            heading.setPadding(dp(12),dp(14),dp(12),dp(14));
+            heading.setLayoutParams(marginParams(0,0,0,12));
+            androidx.core.view.ViewCompat.setAccessibilityHeading(heading,true);
+            section.addView(heading);
+            section.addView(headerRow());
+            int displayIndex=0;
+            for(KeyAudit.Row auditRow:rows) section.addView(row(auditRow,++displayIndex));
+            table.addView(section);
+        }
     }
 
     private View headerRow() {
@@ -347,7 +368,7 @@ public class MainActivity extends AppCompatActivity {
         row.addView(headerCell("Node uses", COL_USES, Gravity.END));
         row.addView(headerCell("On-chain signatures", COL_SIGS, Gravity.END));
         row.addView(headerCell("Spent coins", COL_COINS, Gravity.END));
-        row.addView(headerCell("Status", COL_STATUS, Gravity.END));
+
 
         final LinearLayout wrap = new LinearLayout(this);
         wrap.setOrientation(LinearLayout.VERTICAL);
@@ -361,12 +382,12 @@ public class MainActivity extends AppCompatActivity {
         t.setLetterSpacing(0.06f);
         t.setAllCaps(true);
         t.setGravity(gravity);
-        t.setWidth(dp(widthDp));
+        t.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,widthDp));
         t.setPadding(dp(4), 0, dp(4), 0);
         return t;
     }
 
-    private View row(final KeyAudit.Row r) {
+    private View row(final KeyAudit.Row r, int displayIndex) {
         final LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, dp(9), 0, dp(9));
@@ -374,12 +395,12 @@ public class MainActivity extends AppCompatActivity {
         // address cell: "#N" then the Mx address, wrapping inside its column
         final LinearLayout addrCell = new LinearLayout(this);
         addrCell.setOrientation(LinearLayout.VERTICAL);
-        addrCell.setLayoutParams(new LinearLayout.LayoutParams(dp(COL_ADDR),
-                LinearLayout.LayoutParams.WRAP_CONTENT));
+        addrCell.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,COL_ADDR));
         addrCell.setPadding(dp(4), 0, dp(4), 0);
 
-        final TextView n = text("#" + r.index + (r.blockScheme ? " · 128/4" : ""),
+        final TextView n = text("#" + displayIndex + (r.blockScheme ? " · 128/4" : ""),
                 9.5f, Design.DIM_2, Typeface.NORMAL);
+        n.setTag("keyuses.number."+r.index);
         addrCell.addView(n);
 
         final TextView a = text(r.address, 9.5f, Design.DIM, Typeface.NORMAL);
@@ -425,13 +446,9 @@ public class MainActivity extends AppCompatActivity {
         chip.setPadding(dp(8), dp(3), dp(8), dp(3));
         chip.setGravity(Gravity.CENTER);
 
-        final LinearLayout chipCell = new LinearLayout(this);
-        chipCell.setLayoutParams(new LinearLayout.LayoutParams(dp(COL_STATUS),
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-        chipCell.setGravity(Gravity.END);
-        chipCell.setPadding(dp(4), 0, dp(4), 0);
-        chipCell.addView(chip);
-        row.addView(chipCell);
+        chip.setTag("keyuses.status."+r.index);
+        n.setTextColor(fg);
+        addrCell.addView(chip,1);
 
         final LinearLayout wrap = new LinearLayout(this);
         wrap.setOrientation(LinearLayout.VERTICAL);
@@ -442,8 +459,10 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView numCell(String s, int widthDp) {
         final TextView t = text(s, 12f, Design.TEXT, Typeface.NORMAL);
+        t.setMaxLines(1);
+        t.setAutoSizeTextTypeUniformWithConfiguration(8,12,1,TypedValue.COMPLEX_UNIT_SP);
         t.setGravity(Gravity.END);
-        t.setWidth(dp(widthDp));
+        t.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,widthDp));
         t.setPadding(dp(4), 0, dp(4), 0);
         return t;
     }

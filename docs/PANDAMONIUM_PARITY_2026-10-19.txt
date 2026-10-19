@@ -1,0 +1,17 @@
+KeyUses 0.1.5 / code105 — standalone display parity checkpoint
+Reused adapt-pandamonium-keyuses.py's weighted table/status placement and
+pandamonium-sources/keyreuses/AuditFlow.java.inc renderKeySections helper.
+Classic and block families have separate headings and independent numbering.
+Red/amber/green badges remain with the address; no horizontal scrolling is needed.
+Adaptation: existing standalone blockScheme field and English labels; there is
+no integrated minimaWallet selector in this app. Existing public-key IPC audit
+path retained. No seed input added. Audit-engine parity is still outstanding;
+this display repair does not claim complete dual-family/partial-evidence parity.
+
+33 tests pass, including two adapted screen regressions at 320/480/900dp and
+interleaved keys retaining their original identity/status. Offline signed release
+build and lint pass: 0 errors, 16 warnings. Changed source, tests and layout reviewed;
+no blocking issue in this display change. APK package/version and family signer
+verified. No physical-device check, installation or publication.
+Candidate: dist/keyuses-0.1.5-candidate.apk
+SHA256: 4aa6bfbae89492212910f3fa5e4f7f7ab02c705e30a0295df4b5c3af97a42e03

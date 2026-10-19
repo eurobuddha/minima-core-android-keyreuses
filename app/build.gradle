@@ -10,8 +10,8 @@ android {
         applicationId "com.eurobuddha.keyreuses"
         minSdk 28
         targetSdk 35
-        versionCode 104
-        versionName "0.1.4"
+        versionCode 105
+        versionName "0.1.5"
     }
     signingConfigs {
         // Minima family release key. Credentials come from ~/.gradle/gradle.properties
@@ -47,6 +47,7 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
     }
 }
 
@@ -58,5 +59,6 @@ dependencies {
     implementation files('libs/minimaapi.aar')
 
     // Sha3 / MinimaAddress / KeyAudit are pure Java and unit-tested on the JVM.
+    testImplementation 'org.robolectric:robolectric:4.14.1'
     testImplementation libs.junit
 }
