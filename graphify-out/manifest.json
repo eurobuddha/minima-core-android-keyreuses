@@ -1,8 +1,8 @@
 {
   "app/build.gradle": {
-    "mtime": 1785612795.6893966,
-    "ast_hash": "f5705664a8e3eb94c98bf9f9ec7e81cc",
-    "semantic_hash": "f5705664a8e3eb94c98bf9f9ec7e81cc"
+    "mtime": 1786444373.5516667,
+    "ast_hash": "9d5539fd57cfb67c075cc132a67ee75a",
+    "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/keyreuses/AuditApi.java": {
     "mtime": 1785613026.9230177,
@@ -75,8 +75,8 @@
     "semantic_hash": "bcc306e785b8d3291b12e96acaf24847"
   },
   "CLAUDE.md": {
-    "mtime": 1785612684.0468419,
-    "ast_hash": "4439d09bc81851d89f9ffcecc4136dcf",
+    "mtime": 1786883582.7455096,
+    "ast_hash": "46e9035553a7ba076e59754595bc542a",
     "semantic_hash": ""
   },
   "DESIGN_MAP.md": {
@@ -87,6 +87,16 @@
   "README.md": {
     "mtime": 1785614289.5729094,
     "ast_hash": "6120ff6298f1080a4f94fcd9695db913",
+    "semantic_hash": ""
+  },
+  ".githooks/install.sh": {
+    "mtime": 1786883582.7253218,
+    "ast_hash": "f31b37c6d1b5d340a5623f1715457ea0",
+    "semantic_hash": ""
+  },
+  ".githooks/pre-commit": {
+    "mtime": 1786883582.7221045,
+    "ast_hash": "03526be838d5dd774506cc1f8b47f38c",
     "semantic_hash": ""
   }
 }

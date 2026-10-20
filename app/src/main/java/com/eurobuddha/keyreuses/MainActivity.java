@@ -10,7 +10,6 @@ import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -44,7 +43,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
-    private static final String VERSION = "0.1.6";
+    private static final String VERSION = "0.1.7";
 
     private NodeApi node;
     private AuditApi api;
@@ -184,7 +183,11 @@ public class MainActivity extends AppCompatActivity {
     private void renderResults(KeyAudit.Result r, long archiveTip) {
         resultsBox.removeAllViews();
 
-        if (!r.publicComplete) resultsBox.addView(noticeCard(Copy.INCOMPLETE, Design.WARN));
+        // Incomplete = any row the node counter OR the public side couldn't be read for. When the
+        // verdict is plain OK the verdict card itself carries this text, so don't show it twice.
+        if (!r.complete && r.verdict != KeyAudit.Verdict.OK) {
+            resultsBox.addView(noticeCard(Copy.INCOMPLETE, Design.WARN));
+        }
         if (r.derivationMismatch) {
             resultsBox.addView(noticeCard(Copy.MISMATCH, Design.RISK));
         }
@@ -216,10 +219,14 @@ public class MainActivity extends AppCompatActivity {
                 title = Copy.RISK_TITLE;
                 body = Copy.RISK_BODY;
                 break;
+            case OK:   // explicit: renderResults() pairs its INCOMPLETE notice with `verdict != OK`
             default:
-                color = r.publicComplete ? Design.OK : Design.WARN;
-                title = r.publicComplete ? Copy.OK_TITLE : Copy.PARTIAL;
-                body = r.publicComplete ? Copy.OK_BODY : Copy.INCOMPLETE;
+                // A clean verdict needs `complete` (counter valid AND both endpoints matched for
+                // every key) — not just `publicComplete`. A key whose node counter couldn't be
+                // read was never evaluated, so OK_BODY's claim would be untrue for it.
+                color = r.complete ? Design.OK : Design.WARN;
+                title = r.complete ? Copy.OK_TITLE : Copy.PARTIAL;
+                body = r.complete ? Copy.OK_BODY : Copy.INCOMPLETE;
                 break;
         }
 
@@ -317,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
     /* ---------- results table ---------- */
 
     // Weighted columns keep every count visible; the warning badge stays with its key.
-    private static final int COL_ADDR = 190, COL_USES = 66, COL_SIGS = 82, COL_COINS = 66, COL_STATUS = 90;
+    private static final int COL_ADDR = 190, COL_USES = 66, COL_SIGS = 82, COL_COINS = 66;
 
     private View tableCard(KeyAudit.Result r, long archiveTip) {
         final LinearLayout card = new LinearLayout(this);
@@ -341,28 +348,37 @@ public class MainActivity extends AppCompatActivity {
         return card;
     }
 
-    /** Group display rows without changing their audit identity or source mapping. */
+    /**
+     * Group display rows by family without changing their audit identity or source mapping.
+     * Rows keep the node's own key number (Row.index) so a flagged row can be cross-referenced
+     * against `keys action:list`; the section heading carries the per-family count.
+     */
     private void renderKeySections(LinearLayout table, KeyAudit.Result result) {
-        for(int group=0;group<3;group++) {
-            java.util.List<KeyAudit.Row> rows=new ArrayList<>();
-            for(KeyAudit.Row auditRow:result.rows) {
-                int rowGroup=auditRow.family == KeyAudit.Family.BLOCK ? 1 : auditRow.family == KeyAudit.Family.CLASSIC ? 0 : 2;
-                if(rowGroup==group) rows.add(auditRow);
+        for (int group = 0; group < 3; group++) {
+            final List<KeyAudit.Row> rows = new ArrayList<>();
+            for (KeyAudit.Row auditRow : result.rows) {
+                final int rowGroup = auditRow.family == KeyAudit.Family.BLOCK ? 1
+                        : auditRow.family == KeyAudit.Family.CLASSIC ? 0 : 2;
+                if (rowGroup == group) rows.add(auditRow);
             }
-            if(rows.isEmpty())continue;
-            LinearLayout section=new LinearLayout(this);
+            if (rows.isEmpty()) continue;
+
+            final LinearLayout section = new LinearLayout(this);
             section.setOrientation(LinearLayout.VERTICAL);
-            section.setTag("keyuses.section."+group);
-            section.setLayoutParams(marginParams(0,group==0?0:24,0,0));
-            TextView heading=text((group==0 ? "Classic keys" : group==1 ? "Block-as-keyuses keys" : "Unrecognized key shape")+" · "+rows.size(),15f,Design.ACCENT,Typeface.BOLD);
-            heading.setBackground(Design.card(this,Design.ACCENT_SOFT,Design.BORDER,8));
-            heading.setPadding(dp(12),dp(14),dp(12),dp(14));
-            heading.setLayoutParams(marginParams(0,0,0,12));
-            androidx.core.view.ViewCompat.setAccessibilityHeading(heading,true);
+            section.setTag("keyuses.section." + group);
+            section.setLayoutParams(marginParams(0, group == 0 ? 0 : 24, 0, 0));
+
+            final String name = group == 0 ? "Classic keys"
+                    : group == 1 ? "Block-as-keyuses keys" : "Unrecognized key shape";
+            final TextView heading = text(name + " · " + rows.size(), 15f, Design.ACCENT, Typeface.BOLD);
+            heading.setBackground(Design.card(this, Design.ACCENT_SOFT, Design.BORDER, 8));
+            heading.setPadding(dp(12), dp(14), dp(12), dp(14));
+            heading.setLayoutParams(marginParams(0, 0, 0, 12));
+            androidx.core.view.ViewCompat.setAccessibilityHeading(heading, true);
             section.addView(heading);
             section.addView(headerRow());
-            int displayIndex=0;
-            for(KeyAudit.Row auditRow:rows) section.addView(row(auditRow,++displayIndex));
+
+            for (KeyAudit.Row auditRow : rows) section.addView(row(auditRow));
             table.addView(section);
         }
     }
@@ -395,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
         return t;
     }
 
-    private View row(final KeyAudit.Row r, int displayIndex) {
+    private View row(final KeyAudit.Row r) {
         final LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, dp(9), 0, dp(9));
@@ -406,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
         addrCell.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,COL_ADDR));
         addrCell.setPadding(dp(4), 0, dp(4), 0);
 
-        final TextView n = text("#" + displayIndex + (r.family == KeyAudit.Family.BLOCK ? " · 128/4" : ""),
+        final TextView n = text("#" + r.index + (r.family == KeyAudit.Family.BLOCK ? " · 128/4" : ""),
                 9.5f, Design.DIM_2, Typeface.NORMAL);
         n.setTag("keyuses.number."+r.index);
         addrCell.addView(n);
@@ -430,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
         // status chip
         final String label;
         final int fg, bg;
-        switch (r.reused ? KeyAudit.Status.REUSED : r.risk ? KeyAudit.Status.AT_RISK : r.publicChecked ? KeyAudit.Status.OK : KeyAudit.Status.UNKNOWN) {
+        switch (r.status()) {
             case REUSED:
                 final boolean red = r.reuseCount > KeyAudit.REUSE_RED_ABOVE;
                 fg = red ? Design.RISK : Design.WARN;
@@ -443,7 +459,11 @@ public class MainActivity extends AppCompatActivity {
                 label = "AT RISK";
                 break;
             case UNKNOWN:
-                fg = Design.WARN; bg = Design.WARN_SOFT; label = "Unknown"; break;
+                fg = Design.WARN;
+                bg = Design.WARN_SOFT;
+                // the public side may still be known — keep that count visible rather than hide it
+                label = r.publicChecked && r.sigs > 0 ? "Unknown · used " + num(r.sigs) : "Unknown";
+                break;
             default:
                 fg = Design.OK;
                 bg = Design.OK_SOFT;

@@ -93,9 +93,8 @@ public final class KeyAudit {
     /** One row from GET /reuse — the witness-confirmed known-reuse database. */
     public static final class Reuse {
         public final String address;     // 0x
-        /** The same address in Mx form, when the server echoed it. Needed because this app also asks
-         *  about its RESCUE DESTINATION, which the user supplies as an Mx and whose hex we never see
-         *  (it belongs to another wallet) — so an Mx-keyed match is the only way to find its verdict. */
+        /** The same address in Mx form, when the server echoed it. Informational only: this app
+         *  keys every /reuse lookup by the hex address it sent (see join()). */
         public final String miniaddress;
         public final boolean reused;
         public final long reuseCount;    // worst-leaf reuse depth
@@ -109,12 +108,6 @@ public final class KeyAudit {
             this.miniaddress = miniaddress == null ? "" : miniaddress;
             this.reused = reused;
             this.reuseCount = reuseCount;
-        }
-
-        /** Does this verdict describe the given address, in either spelling? */
-        public boolean matches(String addr) {
-            if (addr == null || addr.isEmpty()) return false;
-            return addr.equalsIgnoreCase(address) || addr.equals(miniaddress);
         }
     }
 
@@ -255,10 +248,13 @@ public final class KeyAudit {
                 mismatch = true;
             }
 
-            if (k.maxUses > 0 && local > k.maxUses - EXHAUSTION_SLACK) exhaustion = true;
-
             final long sigs = u == null ? 0 : u.spendBlocks;
             final long coins = u == null ? 0 : u.spentCoins;
+
+            // Near-exhaustion from EITHER side: the node's own counter, or the chain already showing
+            // that many signatures. The chain case also pushes the keyuses recommendation past
+            // maxuses (so it is withheld) — this notice is what explains that to the user.
+            if (k.maxUses > 0 && Math.max(local, sigs) > k.maxUses - EXHAUSTION_SLACK) exhaustion = true;
 
             // The /reuse lookup keys on the address we actually sent — our own derivation, falling
             // back to the server's echo if the key was malformed and we could not derive one.

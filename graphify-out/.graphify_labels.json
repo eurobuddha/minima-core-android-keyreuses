@@ -1,12 +1,11 @@
 {
   "0": "MainActivity",
   "1": "AuditApi",
-  "2": ".run",
+  "2": "org.junit.Test",
   "3": ".fromPublicKey",
   "4": "KeyAudit",
   "5": "Sha3Test",
-  "6": "NodeApi",
-  "7": "Design",
+  "7": ".card",
   "8": "Copy",
   "9": "gradlew",
   "10": "app/build.gradle",
@@ -14,5 +13,7 @@
   "12": "settings.gradle",
   "13": "KeyUses — native Minima key re-use audit",
   "14": "KeyUses — dapp → APK design map",
-  "15": "JSONArray"
+  "16": "User instructions — AUTHORITATIVE. These override default behavior and must be followed exactly.",
+  "17": "install.sh",
+  "18": "pre-commit"
 }

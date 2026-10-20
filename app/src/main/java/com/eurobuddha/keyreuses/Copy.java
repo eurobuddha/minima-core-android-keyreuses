@@ -12,7 +12,7 @@ final class Copy {
 
     private Copy() {}
 
-    static final String INCOMPLETE = "Some public audit results are missing or inconsistent. Those rows remain unknown. Confirmed reuse findings still apply.";
+    static final String INCOMPLETE = "Some audit results are missing or inconsistent — a public lookup failed, or your node's key counter could not be read. Those rows remain unknown. Confirmed reuse findings still apply.";
     static final String PARTIAL = "Audit needs review";
 
     static final String BADGE = "MINIMA · KEY SECURITY AUDIT";

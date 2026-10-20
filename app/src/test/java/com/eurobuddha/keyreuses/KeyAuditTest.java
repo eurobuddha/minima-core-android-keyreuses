@@ -178,6 +178,21 @@ public class KeyAuditTest {
                 Collections.singletonList(new KeyAudit.LocalKey(PK1, 1000, 262144)),
                 Collections.<KeyAudit.Usage>emptyList(), Collections.<KeyAudit.Reuse>emptyList());
         assertFalse(far.exhaustion);
+
+        // The chain side counts too: ~261,500 signatures observed for a key whose node counter
+        // reads 0 is just as exhausted — and it is what withholds the keyuses recommendation, so
+        // the notice must fire to explain that. Threshold is maxuses - EXHAUSTION_SLACK = 261,144.
+        final KeyAudit.Result chainNear = run(
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 0, 262144)),
+                Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 261500, 261500)),
+                Collections.<KeyAudit.Reuse>emptyList());
+        assertTrue(chainNear.exhaustion);
+
+        final KeyAudit.Result chainFar = run(
+                Collections.singletonList(new KeyAudit.LocalKey(PK1, 0, 262144)),
+                Collections.singletonList(new KeyAudit.Usage(PK1, addr(PK1), 261000, 261000)),
+                Collections.<KeyAudit.Reuse>emptyList());
+        assertFalse(chainFar.exhaustion);
     }
 
     @Test
