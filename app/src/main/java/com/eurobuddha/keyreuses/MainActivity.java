@@ -1,5 +1,6 @@
 package com.eurobuddha.keyreuses;
 
+import com.eurobuddha.minimaapi.MinimaAPI;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -42,7 +43,6 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String NODE_PACKAGE = "com.eurobuddha.minimacore";
     private static final String VERSION = "0.1.7";
 
     private NodeApi node;
@@ -683,9 +683,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openNode() {
-        Intent i = getPackageManager().getLaunchIntentForPackage(NODE_PACKAGE);
-        if (i == null) i = getPackageManager().getLaunchIntentForPackage("com.eurobuddha.minimablock");
-        if (i == null) i = getPackageManager().getLaunchIntentForPackage("com.eurobuddha.pandamonium");
+        Intent i = MinimaAPI.launchNode(this);
         if (i != null) {
             startActivity(i);
         } else {
