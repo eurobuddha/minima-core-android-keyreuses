@@ -35,7 +35,13 @@ Companion APK — it does **not** embed a node. Java + classic Views, talking to
 app (`com.eurobuddha.minimacore`) over broadcast-Intent IPC via `app/libs/minimaapi.aar`.
 
 ```
-keys action:list  ──►  node (IPC)      64 x {publickey, uses, maxuses}
+vault action:seed  ──►  node (IPC)     the base seed — derivation input only, never kept
+        │
+        ├─ KeyDerive.defaultKeys()   →  64 classic (64/3) + 32 block-as-keyuses (128/4) public
+        │                               keys, on-device, across cores (~4 s on a 2019 phone)
+keys action:list   ──►  node (IPC)     n x {publickey, size, depth, uses, maxuses}
+        │
+        ├─ AuditSelection            →  derived ∪ held, counters filled from the node, source bits
         │
         ├─ MinimaAddress.fromPublicKey()  →  0x + Mx address, on-device
         │
@@ -45,11 +51,21 @@ keys action:list  ──►  node (IPC)      64 x {publickey, uses, maxuses}
                      └─ KeyAudit.join()  →  rows + verdict + recommended keyuses
 ```
 
+Since 0.1.9 the scope matches Pandamonium KeyUses 1.9.97: every default key the node's seed can
+produce is audited, not just the keys the node currently holds. On a `-blockaskeyuses` node that
+means the 64 classic keys it no longer lists are still checked against the chain (they show a dash
+for the local counter and are judged on public evidence); on a classic node the 32 block keys are
+checked the same way. `KeyDerive` reproduces the node's `TreeKey` public key with only BouncyCastle
+1.69's WOTS and SHA3 (no MMR/TreeKey vendoring) and is pinned byte-for-byte to the golden vectors
+shared with Pandamonium (`app/src/test/resources/keyuses-derive-vectors.json`).
+
 ### Files
 
 | File | Role |
 |---|---|
 | `NodeApi.java` | IPC wrapper, copied verbatim from `apks/utxo` (package line only) |
+| `KeyDerive.java` | base seed → the 96 default public keys (TreeKey recipe, golden-vector tested) |
+| `AuditSelection.java` | merges derived and held keys, fails closed on anything inconsistent |
 | `Sha3.java` | FIPS-202 SHA3-256, self-contained |
 | `MinimaAddress.java` | public key → default address (`0x` + `Mx`) |
 | `AuditApi.java` | bounded HTTPS client for the two audit endpoints |
@@ -87,8 +103,10 @@ the node app, which renders your seed phrase.
 
 ### IPC safety
 
-`keys action:list` is the app's entire node surface: one READ command, 64 rows, roughly 13 KB — far
-under the app-side 256 KB `MAX_MESSAGE_LEN` and the ~1 MB Android Binder ceiling. **No paging is
+`vault action:seed` and `keys action:list` are the app's entire node surface: two READ commands, the
+second at most ~100 rows, roughly 13–20 KB — far under the app-side 256 KB `MAX_MESSAGE_LEN` and the
+~1 MB Android Binder ceiling. The seed reply is parsed into a byte array that is zeroed right after
+derivation; it is never logged, stored or rendered. **No paging is
 needed and none is implemented**; the adaptive-halving machinery from `apks/history` would be dead
 weight here.
 
@@ -149,6 +167,7 @@ Both agree with the goldens in the test.
 
 ## Scope
 
-v0.1.0 ports the node-audit dapp only. Not included: the `KeyUses Phrase` variant (seed-phrase entry
-with on-device WOTS/MMR derivation), the "check any address" screen, and the paste-your-own-scan
+v0.1.0 ported the node-audit dapp only; v0.1.9 adds the `KeyUses Phrase` derivation scope (64 classic
++ 32 block keys) driven by the node's own seed, with no phrase entry. Not included: Pandamonium's
+optional in-process minimaWallet key set, the "check any address" screen, and the paste-your-own-scan
 archive mode.

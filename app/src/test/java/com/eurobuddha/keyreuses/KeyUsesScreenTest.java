@@ -39,9 +39,10 @@ public class KeyUsesScreenTest {
         assertEquals(66,((ViewGroup)root.findViewWithTag("keyuses.section.0")).getChildCount());
         assertEquals(34,((ViewGroup)root.findViewWithTag("keyuses.section.1")).getChildCount());
         assertEquals("#64",((TextView)root.findViewWithTag("keyuses.number.64")).getText().toString());
-        // rows keep the node's own key number so they cross-reference against `keys action:list`
-        assertEquals("#65 · 128/4",((TextView)root.findViewWithTag("keyuses.number.65")).getText().toString());
-        assertEquals("#96 · 128/4",((TextView)root.findViewWithTag("keyuses.number.96")).getText().toString());
+        // rows are numbered within their family (Classic 1-64, Block 1-32) like Pandamonium; the
+        // view tag keeps the audit identity (Row.index)
+        assertEquals("#1 · 128/4",((TextView)root.findViewWithTag("keyuses.number.65")).getText().toString());
+        assertEquals("#32 · 128/4",((TextView)root.findViewWithTag("keyuses.number.96")).getText().toString());
         assertChip(root,1,"RE-USED ×4",Design.RISK);assertChip(root,2,"RE-USED ×1",Design.WARN);
         assertChip(root,3,"AT RISK",Design.RISK);assertChip(root,4,"Used · 999,999",Design.OK);
         noHorizontalScroll(root);
@@ -60,18 +61,18 @@ public class KeyUsesScreenTest {
         View root=build(activity,Arrays.asList(new KeyAudit.Row(1,"Mxblock",4,4,4,false,true,5,KeyAudit.Family.BLOCK,true,true),new KeyAudit.Row(2,"Mxclassic",4,4,4,false,false,0,KeyAudit.Family.CLASSIC,true,true)));
         ViewGroup classic=root.findViewWithTag("keyuses.section.0"),blocks=root.findViewWithTag("keyuses.section.1");
         assertNotNull(classic.findViewWithTag("keyuses.number.2"));assertNull(classic.findViewWithTag("keyuses.number.1"));
-        assertNotNull(blocks.findViewWithTag("keyuses.number.1"));assertEquals("#2",((TextView)classic.findViewWithTag("keyuses.number.2")).getText().toString());
+        assertNotNull(blocks.findViewWithTag("keyuses.number.1"));assertEquals("#1",((TextView)classic.findViewWithTag("keyuses.number.2")).getText().toString());
         assertChip(root,1,"RE-USED ×5",Design.RISK);
     }
-    @Test public void partialRowsAreAmberWhileKnownPublicUseRemainsVisible()throws Exception {
+    @Test public void missingPublicEvidenceIsAmberWhileKnownPublicUseIsGreen()throws Exception {
         MainActivity activity=Robolectric.buildActivity(MainActivity.class).get();
         List<KeyAudit.Row> rows=Arrays.asList(
             new KeyAudit.Row(1,"Mxunknown",0,0,0,false,false,0,KeyAudit.Family.CLASSIC,false,false),
             new KeyAudit.Row(2,"Mxused",-1,35,40,false,false,0,KeyAudit.Family.BLOCK,false,true));
         View root=build(activity,rows);
         assertChip(root,1,"Unknown",Design.WARN);
-        // counter unreadable but public side known: stays amber, keeps the known count visible
-        assertChip(root,2,"Unknown · used 35",Design.WARN);
+        // no local counter (a derived, not held, key) but public history known: judged on that
+        assertChip(root,2,"Used · 35",Design.OK);
         KeyAudit.Result result=new KeyAudit.Result(rows,KeyAudit.Verdict.OK,0,256,false,false);
         Method m=MainActivity.class.getDeclaredMethod("verdictCard",KeyAudit.Result.class);m.setAccessible(true);
         ViewGroup verdict=(ViewGroup)m.invoke(activity,result);
@@ -79,17 +80,21 @@ public class KeyUsesScreenTest {
         assertEquals("Audit needs review",title.getText().toString());assertEquals(Design.WARN,title.getCurrentTextColor());
         assertFalse(containsText(verdict,Copy.RECO_LABEL)); // Block-family explanation is still allowed.
     }
-    /** A classic key whose node counter could not be read (uses == -1) has full public evidence but
-     *  was never evaluated: the audit must say so, never render the green "no re-use" verdict. */
-    @Test public void counterInvalidClassicKeyNeverRendersCleanVerdict()throws Exception {
+    /** A derived classic key has no local counter (uses == -1) but full public evidence: the public
+     *  verdict is green (Pandamonium 1.9.97), while the keyuses recommendation — which needs a real
+     *  counter — is withheld. A held key with an unreadable counter never reaches rendering:
+     *  AuditSelection fails closed on it. */
+    @Test public void derivedClassicKeyIsJudgedOnPublicEvidenceWithoutRecommendation()throws Exception {
         MainActivity activity=Robolectric.buildActivity(MainActivity.class).get();
         List<KeyAudit.Row> rows=Arrays.asList(new KeyAudit.Row(1,"Mxclassic",-1,12,12,false,false,0,KeyAudit.Family.CLASSIC,false,true));
         KeyAudit.Result result=new KeyAudit.Result(rows,KeyAudit.Verdict.OK,0,256,false,false);
         assertFalse(result.complete);assertTrue(result.publicComplete);
         Method m=MainActivity.class.getDeclaredMethod("verdictCard",KeyAudit.Result.class);m.setAccessible(true);
-        TextView title=(TextView)((ViewGroup)m.invoke(activity,result)).getChildAt(0);
-        assertEquals(Copy.PARTIAL,title.getText().toString());assertEquals(Design.WARN,title.getCurrentTextColor());
-        assertChip(build(activity,rows),1,"Unknown · used 12",Design.WARN);
+        ViewGroup verdict=(ViewGroup)m.invoke(activity,result);
+        TextView title=(TextView)verdict.getChildAt(0);
+        assertEquals(Copy.OK_TITLE,title.getText().toString());assertEquals(Design.OK,title.getCurrentTextColor());
+        assertFalse(containsText(verdict,Copy.RECO_LABEL));
+        assertChip(build(activity,rows),1,"Used · 12",Design.OK);
     }
     @Test public void invalidNodeCounterIsNeverCoercedToZero()throws Exception {
         Method m=MainActivity.class.getDeclaredMethod("exactInt",org.json.JSONObject.class,String.class,int.class);m.setAccessible(true);

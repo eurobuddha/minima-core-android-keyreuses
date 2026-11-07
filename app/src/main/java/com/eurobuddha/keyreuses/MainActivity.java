@@ -34,16 +34,19 @@ import java.util.Locale;
  * KeyUses — audits this node's keys (classic 64/3 and block-as-keyuses 128/4) for
  * one-time-signature (Winternitz) re-use.
  *
- * <p>Native port of the KeyUses MiniDapp ({@code mds/keyuses/minidapp/index.html} v0.1.55). One
- * screen, one node command ({@code keys action:list}), addresses derived on-device, and two
- * parallel HTTPS lookups against the hosted archive index.
+ * <p>Native port of the KeyUses MiniDapp ({@code mds/keyuses/minidapp/index.html} v0.1.55),
+ * upgraded to Pandamonium KeyUses 1.9.97's scope: the node's seed ({@code vault action:seed})
+ * derives all 64 classic and 32 block-as-keyuses default public keys on-device
+ * ({@link KeyDerive}), merged with {@code keys action:list} ({@link AuditSelection}), addresses
+ * derived on-device, and two parallel HTTPS lookups against the hosted archive index. The seed
+ * is only ever an input to the derivation; it is never stored, displayed or sent.
  *
  * <p>The dapp is a single vertically-scrolling column, so the whole UI is built programmatically
  * into the layout's container — the fleet idiom.
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String VERSION = "0.1.7";
+    private static final String VERSION = "0.1.9";
 
     private NodeApi node;
     private AuditApi api;
@@ -57,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout resultsBox;
 
     private boolean busy = false;
+
+    private final java.util.concurrent.ExecutorService worker =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
+    /** Bumped per run and on destroy so a stale worker/network callback cannot touch the UI. */
+    private int generation;
+    private AuditSelection selection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        generation++;
+        worker.shutdownNow();
         if (node != null) node.onDestroy();
         if (api != null) api.onDestroy();
         super.onDestroy();
@@ -101,34 +112,90 @@ public class MainActivity extends AppCompatActivity {
 
     /* ====================== the audit ====================== */
 
+    private boolean live(int request) {
+        return request == generation && !isFinishing() && !isDestroyed();
+    }
+
+    private void fail(int request, String message) {
+        if (!live(request)) return;
+        setBusy(false);
+        showError(message);
+    }
+
+    private void nodeError(int request, String message) {
+        if (!live(request)) return;
+        setBusy(false);
+        if (NodeApi.ERR_NOT_ENABLED.equals(message)) setPaired(false); else showError(message);
+    }
+
     private void runAudit() {
         if (busy) return;
         clearError();
         setBusy(true);
         resultsBox.removeAllViews();
         resultsBox.setVisibility(View.GONE);
+        selection = null;
+        final int request = ++generation;
 
-        node.cmd("keys action:list", new NodeApi.Cb() {
+        // 1. the base seed — input to the derivation only
+        node.cmd("vault action:seed", new NodeApi.Cb() {
             @Override public void onResult(JSONObject json) {
+                if (!live(request)) return;
                 setPaired(true);
                 final JSONObject resp = json == null ? null : json.optJSONObject("response");
-                final JSONArray keys = resp == null ? null : resp.optJSONArray("keys");
-                if (keys == null || !Boolean.TRUE.equals(json.opt("status"))) {
-                    setBusy(false);
-                    showError(Copy.ERR_KEYS);
+                final String seed = resp == null ? "" : resp.optString("seed", "");
+                if (!Boolean.TRUE.equals(json.opt("status")) || !seed.matches("0x[0-9a-fA-F]{64}")) {
+                    fail(request, Copy.ERR_SEED);
                     return;
                 }
-                onKeys(keys);
+                // 2. the keys the node actually holds, with their counters
+                node.cmd("keys action:list", new NodeApi.Cb() {
+                    @Override public void onResult(JSONObject json) {
+                        if (!live(request)) return;
+                        final JSONObject resp = json == null ? null : json.optJSONObject("response");
+                        final JSONArray keys = resp == null ? null : resp.optJSONArray("keys");
+                        if (keys == null || !Boolean.TRUE.equals(json.opt("status"))) {
+                            fail(request, Copy.ERR_KEYS);
+                            return;
+                        }
+                        derive(request, seed, keys.toString());
+                    }
+                    @Override public void onError(String message) { nodeError(request, message); }
+                });
             }
+            @Override public void onError(String message) { nodeError(request, message); }
+        });
+    }
 
-            @Override public void onError(String message) {
-                setBusy(false);
-                if (NodeApi.ERR_NOT_ENABLED.equals(message)) {
-                    setPaired(false);
-                } else {
-                    showError(message);
-                }
+    /** 3. derive the 96 default public keys off the main thread, merge, then 4. audit. */
+    private void derive(int request, String seedHex, String nodeKeys) {
+        worker.submit(() -> {
+            final AuditSelection chosen;
+            try {
+                final byte[] seed = KeyDerive.unhex(seedHex);
+                final String derived = KeyDerive.defaultKeys(seed, done -> runOnUiThread(() -> {
+                    if (live(request)) runLabel.setText(Copy.progress(done));
+                })).toString();
+                java.util.Arrays.fill(seed, (byte) 0);
+                chosen = new AuditSelection(nodeKeys, derived);
+            } catch (Exception unavailable) {
+                runOnUiThread(() -> fail(request, Copy.ERR_DERIVE));
+                return;
             }
+            runOnUiThread(() -> {
+                if (!live(request)) return;
+                runLabel.setText("Auditing…");
+                selection = chosen;
+                api.audit(chosen.publicKeys, chosen.hexAddresses, new AuditApi.Cb() {
+                    @Override
+                    public void onResult(List<KeyAudit.Usage> usage, List<KeyAudit.Reuse> reuse, long tip) {
+                        if (!live(request)) return;
+                        setBusy(false);
+                        renderResults(KeyAudit.join(chosen.keys, usage, reuse, chosen.addresses), tip);
+                    }
+                    @Override public void onError(String message) { fail(request, message); }
+                });
+            });
         });
     }
 
@@ -139,55 +206,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void onKeys(JSONArray keys) {
-        final List<KeyAudit.LocalKey> local = new ArrayList<>();
-        final List<MinimaAddress.Result> derived = new ArrayList<>();
-        final List<String> pubs = new ArrayList<>();
-        final List<String> addrs = new ArrayList<>();
-
-        for (int i = 0; i < keys.length(); i++) {
-            final JSONObject k = keys.optJSONObject(i);
-            if (k == null) continue;
-            final String pk = k.optString("publickey", "");
-            local.add(new KeyAudit.LocalKey(pk, exactInt(k, "uses", -1),
-                    exactInt(k, "maxuses", 0), exactInt(k, "size", 0), exactInt(k, "depth", 0)));
-
-            final MinimaAddress.Result d = MinimaAddress.fromPublicKey(pk);
-            derived.add(d);
-            if (!pk.isEmpty()) pubs.add(pk);
-            if (d != null) addrs.add(d.hex);
-        }
-
-        if (local.isEmpty()) {
-            setBusy(false);
-            showError(Copy.ERR_KEYS);
-            return;
-        }
-
-        api.audit(pubs, addrs, new AuditApi.Cb() {
-            @Override
-            public void onResult(List<KeyAudit.Usage> usage, List<KeyAudit.Reuse> reuse, long tip) {
-                setBusy(false);
-                renderResults(KeyAudit.join(local, usage, reuse, derived), tip);
-            }
-
-            @Override public void onError(String message) {
-                setBusy(false);
-                showError(message);
-            }
-        });
-    }
-
     /* ====================== rendering ====================== */
 
     private void renderResults(KeyAudit.Result r, long archiveTip) {
         resultsBox.removeAllViews();
 
-        // Incomplete = any row the node counter OR the public side couldn't be read for. When the
-        // verdict is plain OK the verdict card itself carries this text, so don't show it twice.
-        if (!r.complete && r.verdict != KeyAudit.Verdict.OK) {
-            resultsBox.addView(noticeCard(Copy.INCOMPLETE, Design.WARN));
-        }
+        // Public evidence is the audit's unit of completeness (Pandamonium 1.9.97): derived keys
+        // legitimately have no local counter, so a missing counter alone is not "incomplete".
+        if (!r.publicComplete) resultsBox.addView(noticeCard(Copy.INCOMPLETE, Design.WARN));
+        final TextView scope = text(Copy.scope(r.classicKeys, r.blockKeys), 12f, Design.DIM, Typeface.NORMAL);
+        scope.setPadding(0, 0, 0, dp(12));
+        resultsBox.addView(scope);
         if (r.derivationMismatch) {
             resultsBox.addView(noticeCard(Copy.MISMATCH, Design.RISK));
         }
@@ -219,14 +248,14 @@ public class MainActivity extends AppCompatActivity {
                 title = Copy.RISK_TITLE;
                 body = Copy.RISK_BODY;
                 break;
-            case OK:   // explicit: renderResults() pairs its INCOMPLETE notice with `verdict != OK`
+            case OK:
             default:
-                // A clean verdict needs `complete` (counter valid AND both endpoints matched for
-                // every key) — not just `publicComplete`. A key whose node counter couldn't be
-                // read was never evaluated, so OK_BODY's claim would be untrue for it.
-                color = r.complete ? Design.OK : Design.WARN;
-                title = r.complete ? Copy.OK_TITLE : Copy.PARTIAL;
-                body = r.complete ? Copy.OK_BODY : Copy.INCOMPLETE;
+                // Clean = matching public evidence for every key. Keys without a local counter
+                // (derived, not held) are judged on public history alone, as in Pandamonium;
+                // the keyuses recommendation still needs `complete` (see addRecoBlocks).
+                color = r.publicComplete ? Design.OK : Design.WARN;
+                title = r.publicComplete ? Copy.OK_TITLE : Copy.PARTIAL;
+                body = r.publicComplete ? Copy.OK_BODY : Copy.INCOMPLETE;
                 break;
         }
 
@@ -348,10 +377,22 @@ public class MainActivity extends AppCompatActivity {
         return card;
     }
 
+    /** "Node · Node seed · classic" etc. — where this row's key came from. */
+    private String sourceLabel(int index) {
+        if (selection == null || index < 1 || index > selection.origins.size()) return "";
+        final int flags = selection.origins.get(index - 1);
+        final List<String> names = new ArrayList<>();
+        if ((flags & AuditSelection.NODE) != 0) names.add(Copy.SRC_NODE);
+        if ((flags & AuditSelection.CLASSIC) != 0) names.add(Copy.SRC_CLASSIC);
+        if ((flags & AuditSelection.BLOCK) != 0) names.add(Copy.SRC_BLOCK);
+        return String.join(" · ", names);
+    }
+
     /**
      * Group display rows by family without changing their audit identity or source mapping.
-     * Rows keep the node's own key number (Row.index) so a flagged row can be cross-referenced
-     * against `keys action:list`; the section heading carries the per-family count.
+     * Rows are numbered 1..n within their family (Classic 1–64, Block 1–32, like Pandamonium);
+     * view tags keep Row.index, the audit identity, and the source label says where the key
+     * came from. The section heading carries the per-family count.
      */
     private void renderKeySections(LinearLayout table, KeyAudit.Result result) {
         for (int group = 0; group < 3; group++) {
@@ -378,7 +419,8 @@ public class MainActivity extends AppCompatActivity {
             section.addView(heading);
             section.addView(headerRow());
 
-            for (KeyAudit.Row auditRow : rows) section.addView(row(auditRow));
+            int displayIndex = 0;
+            for (KeyAudit.Row auditRow : rows) section.addView(row(auditRow, ++displayIndex));
             table.addView(section);
         }
     }
@@ -411,7 +453,7 @@ public class MainActivity extends AppCompatActivity {
         return t;
     }
 
-    private View row(final KeyAudit.Row r) {
+    private View row(final KeyAudit.Row r, int displayIndex) {
         final LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, dp(9), 0, dp(9));
@@ -422,10 +464,12 @@ public class MainActivity extends AppCompatActivity {
         addrCell.setLayoutParams(new LinearLayout.LayoutParams(0,LinearLayout.LayoutParams.WRAP_CONTENT,COL_ADDR));
         addrCell.setPadding(dp(4), 0, dp(4), 0);
 
-        final TextView n = text("#" + r.index + (r.family == KeyAudit.Family.BLOCK ? " · 128/4" : ""),
+        final TextView n = text("#" + displayIndex + (r.family == KeyAudit.Family.BLOCK ? " · 128/4" : ""),
                 9.5f, Design.DIM_2, Typeface.NORMAL);
         n.setTag("keyuses.number."+r.index);
         addrCell.addView(n);
+        final String source = sourceLabel(r.index);
+        if (!source.isEmpty()) addrCell.addView(text(source, 9.5f, Design.DIM_2, Typeface.NORMAL));
 
         final TextView a = text(r.address, 9.5f, Design.DIM, Typeface.NORMAL);
         a.setTypeface(Typeface.MONOSPACE);
@@ -446,7 +490,9 @@ public class MainActivity extends AppCompatActivity {
         // status chip
         final String label;
         final int fg, bg;
-        switch (r.status()) {
+        // Public evidence decides the chip; a missing local counter shows as a dash, not Unknown.
+        switch (r.reused ? KeyAudit.Status.REUSED : r.risk ? KeyAudit.Status.AT_RISK
+                : r.publicChecked ? KeyAudit.Status.OK : KeyAudit.Status.UNKNOWN) {
             case REUSED:
                 final boolean red = r.reuseCount > KeyAudit.REUSE_RED_ABOVE;
                 fg = red ? Design.RISK : Design.WARN;
@@ -461,8 +507,7 @@ public class MainActivity extends AppCompatActivity {
             case UNKNOWN:
                 fg = Design.WARN;
                 bg = Design.WARN_SOFT;
-                // the public side may still be known — keep that count visible rather than hide it
-                label = r.publicChecked && r.sigs > 0 ? "Unknown · used " + num(r.sigs) : "Unknown";
+                label = "Unknown";
                 break;
             default:
                 fg = Design.OK;
@@ -478,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
 
         chip.setTag("keyuses.status."+r.index);
         n.setTextColor(fg);
-        addrCell.addView(chip,1);
+        addrCell.addView(chip, 1);
 
         final LinearLayout wrap = new LinearLayout(this);
         wrap.setOrientation(LinearLayout.VERTICAL);

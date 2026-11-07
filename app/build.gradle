@@ -10,8 +10,8 @@ android {
         applicationId "com.eurobuddha.keyreuses"
         minSdk 28
         targetSdk 35
-        versionCode 108
-        versionName "0.1.8"
+        versionCode 109
+        versionName "0.1.9"
     }
     signingConfigs {
         // Minima family release key. Credentials come from ~/.gradle/gradle.properties
@@ -57,6 +57,10 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation files('libs/minimaapi.aar')
+    // KeyDerive uses WinternitzOTSignature from the PQC gmss.util package, REMOVED in bcprov 1.71+
+    // (every jdk18on release). minima-core signs with bcprov-jdk15on:1.69 — pin it, never upgrade,
+    // never mix with jdk18on (family hard rule).
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.69'
 
     // Sha3 / MinimaAddress / KeyAudit are pure Java and unit-tested on the JVM.
     testImplementation 'org.robolectric:robolectric:4.14.1'

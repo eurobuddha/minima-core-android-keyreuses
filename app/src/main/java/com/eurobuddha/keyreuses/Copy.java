@@ -30,9 +30,26 @@ final class Copy {
 
     /** index.html:96-101 */
     static final String PRIVACY =
-            "<b>Privacy:</b> your <i>public</i> keys are sent to eurobuddha.com, which returns "
-            + "how often each of your addresses was spent. Public keys can't move funds, but they "
-            + "do reveal your addresses to that server.";
+            "<b>Privacy:</b> this app reads your node's seed over the local Minima Core link only "
+            + "to derive its 64 classic and 32 block-as-keyuses public keys on this device — the "
+            + "seed is never stored, shown or sent. Your <i>public</i> keys are sent to "
+            + "eurobuddha.com, which returns how often each of your addresses was spent. Public "
+            + "keys can't move funds, but they do reveal your addresses to that server.";
+
+    static final String ERR_SEED =
+            "Could not read this node's seed (vault action:seed). Is Minima Core running, its vault "
+            + "unlocked, and this app enabled in Minima Core → Apps?";
+    static final String ERR_DERIVE =
+            "Could not prepare the public keys. The node's key list or the derived set was "
+            + "incomplete or inconsistent — check that the node is running and unlocked, then retry.";
+
+    static String progress(int done) { return "Deriving public keys… " + done + "/" + KeyDerive.TOTAL; }
+    static String scope(int classic, int block) {
+        return "Checked scope: " + classic + " classic · " + block + " block-as-keyuses keys";
+    }
+    static final String SRC_NODE = "Node";
+    static final String SRC_CLASSIC = "Node seed · classic";
+    static final String SRC_BLOCK = "Node seed · block-based";
 
     /** index.html:176 */
     static final String ERR_KEYS =
