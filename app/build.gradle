@@ -10,8 +10,8 @@ android {
         applicationId "com.eurobuddha.keyreuses"
         minSdk 28
         targetSdk 35
-        versionCode 109
-        versionName "0.1.9"
+        versionCode 110
+        versionName "0.1.10"
     }
     signingConfigs {
         // Minima family release key. Credentials come from ~/.gradle/gradle.properties
